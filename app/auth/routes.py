@@ -3,7 +3,7 @@ from app.extensions import db, login_manager
 from datetime import datetime
 import cloudinary.uploader
 from flask_login import login_user, logout_user
-from app.services.auth_services import check_login, get_user_account_by_id
+from app.services.auth_services import check_login, get_user_account_by_id, add_user_default
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -11,18 +11,17 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 def user_login():
     err_msg = None
     if request.method == 'POST':
-        user_name = request.form.get('user_name', '').strip()
+        username = request.form.get('user_name', '').strip()
         password = request.form.get('password', '').strip()
 
         # Validate input
-        if not user_name or not password:
+        if not username or not password:
             err_msg = "Vui lòng nhập đầy đủ tên người dùng và mật khẩu"
             return render_template('auth/login.html', err_msg=err_msg)
 
-        user_account = check_login(user_name=user_name, password=password)
+        user_account = check_login(user_name=username, password=password)
 
         if user_account:
-            # Check role by profile existence or role name
             if user_account.role and user_account.role.name:
                 role_name = user_account.role.name.lower()
             elif user_account.member_profile:
@@ -42,7 +41,7 @@ def user_login():
                 return redirect(url_for('main.index'))  # TODO: update redirect when trainer route is created
             elif role_name == 'admin':
                 login_user(user_account)
-                return redirect('/admin')
+                return redirect(url_for('admin.index'))
             elif role_name == 'receptionist':
                 login_user(user_account)
                 return redirect('/receptionist')  # TODO: update redirect when receptionist route is created
@@ -78,14 +77,8 @@ def user_register():
         birth_day = request.form.get('birth_day')
         gender = request.form.get('gender')
         confirm = request.form.get('confirm')
-        image_path = None
-        insurance_number = request.form.get('insurance_number')
         try:
             if password.strip().__eq__(confirm.strip()):
-                image = request.files.get('image')
-                if image:
-                    res = cloudinary.uploader.upload(image)
-                    image_path = res['secure_url']
                 add_user_default(first_name=first_name,
                         last_name=last_name,
                         user_name= user_name,
@@ -94,8 +87,6 @@ def user_register():
                         phone_number=phone_number,
                         gender=gender,
                         birth_day=datetime.strptime(birth_day, '%Y-%m-%d').date(),
-                        image = image_path,
-                        insurance_number = insurance_number
                         )
                 return redirect(url_for('auth.user_login'))
             else:
