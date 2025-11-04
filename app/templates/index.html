@@ -1,0 +1,286 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ - GYM Beta{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-6">
+                <h1 class="hero-title">KHỎE TỪ BÊN NGOÀI<br>SÁNG TỪ BÊN TRONG</h1>
+                <p class="hero-subtitle">GYM Beta - Hệ thống phòng gym hiện đại với hơn 14+ chi nhánh trên toàn quốc.
+                    Nơi biến đổi cơ thể và tinh thần của bạn mỗi ngày.</p>
+                <div class="hero-buttons mt-4">
+                    <a href="{{ url_for('auth.user_register') }}" class="btn btn-primary btn-lg me-3">Tham gia ngay</a>
+                    <a href="#about" class="btn btn-outline-light btn-lg">Tìm hiểu thêm</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center mt-5 mt-lg-0">
+                <div class="hero-image-placeholder">
+                    <div class="hero-stats d-flex justify-content-around">
+                        <div class="stat-item">
+                            <h3 class="stat-number">14+</h3>
+                            <p class="stat-label">Chi nhánh</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 class="stat-number">50K+</h3>
+                            <p class="stat-label">Hội viên</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 class="stat-number">100+</h3>
+                            <p class="stat-label">Huấn luyện viên</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2 class="section-title">Về GYM Beta</h2>
+                <p class="lead">GYM Beta được thành lập với sứ mệnh mang đến không gian tập luyện chuyên nghiệp,
+                    hiện đại và thân thiện cho mọi người.</p>
+                <p>Với hệ thống máy móc hiện đại, đội ngũ huấn luyện viên giàu kinh nghiệm và môi trường tập luyện
+                    đầy cảm hứng, GYM Beta cam kết đồng hành cùng bạn trong hành trình chinh phục mục tiêu sức khỏe và
+                    vóc dáng.</p>
+                <ul class="feature-list">
+                    <li><strong>Máy móc hiện đại:</strong> Thiết bị nhập khẩu từ các thương hiệu hàng đầu thế giới</li>
+                    <li><strong>Huấn luyện viên chuyên nghiệp:</strong> Đội ngũ PT được đào tạo bài bản, tận tâm</li>
+                    <li><strong>Không gian rộng rãi:</strong> Phòng tập thoáng mát, sạch sẽ, đầy đủ tiện nghi</li>
+                    <li><strong>Lớp tập nhóm đa dạng:</strong> Yoga, Pilates, Zumba, Cardio và nhiều lớp khác</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="about-image-box p-4 bg-light rounded">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="feature-card p-3 text-center bg-white rounded shadow-sm">
+                                <div class="feature-icon mb-3">🏋️</div>
+                                <h5>Thiết bị đầy đủ</h5>
+                                <p class="small mb-0">Máy tập hiện đại</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-card p-3 text-center bg-white rounded shadow-sm">
+                                <div class="feature-icon mb-3">👥</div>
+                                <h5>Cộng đồng lớn</h5>
+                                <p class="small mb-0">50K+ hội viên</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-card p-3 text-center bg-white rounded shadow-sm">
+                                <div class="feature-icon mb-3">⭐</div>
+                                <h5>Chất lượng cao</h5>
+                                <p class="small mb-0">Tiêu chuẩn 5 sao</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-card p-3 text-center bg-white rounded shadow-sm">
+                                <div class="feature-icon mb-3">📍</div>
+                                <h5>Nhiều chi nhánh</h5>
+                                <p class="small mb-0">14+ địa điểm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Dịch vụ của chúng tôi</h2>
+            <p class="section-subtitle">Đa dạng dịch vụ đáp ứng mọi nhu cầu tập luyện của bạn</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="service-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="service-icon mb-3">💪</div>
+                    <h4 class="service-title">Tập luyện cá nhân</h4>
+                    <p>Huấn luyện viên cá nhân sẽ thiết kế chương trình tập phù hợp với mục tiêu và thể trạng của bạn
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="service-icon mb-3">🧘</div>
+                    <h4 class="service-title">Lớp tập nhóm</h4>
+                    <p>Yoga, Pilates, Zumba, Cardio với giáo viên chuyên nghiệp, không khí sôi động và đầy năng lượng
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="service-icon mb-3">📋</div>
+                    <h4 class="service-title">Tư vấn dinh dưỡng</h4>
+                    <p>Chế độ ăn uống khoa học được tư vấn bởi chuyên gia dinh dưỡng để đạt hiệu quả tối đa</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row g-4 text-center text-white">
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <h3 class="stat-number-large">14+</h3>
+                    <p class="stat-text">Chi nhánh trên toàn quốc</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <h3 class="stat-number-large">50,000+</h3>
+                    <p class="stat-text">Hội viên đang tập luyện</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <h3 class="stat-number-large">100+</h3>
+                    <p class="stat-text">Huấn luyện viên chuyên nghiệp</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <h3 class="stat-number-large">15+</h3>
+                    <p class="stat-text">Năm kinh nghiệm</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Packages Section -->
+<section id="packages" class="packages-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Gói tập luyện</h2>
+            <p class="section-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="package-card h-100 p-4 bg-white rounded shadow-sm">
+                    <h4 class="package-name">Gói Cơ Bản</h4>
+                    <div class="package-price mb-3">
+                        <span class="price-amount">1,500,000₫</span>
+                        <span class="price-period">/tháng</span>
+                    </div>
+                    <ul class="package-features">
+                        <li>Truy cập tất cả máy tập</li>
+                        <li>Tập luyện không giới hạn</li>
+                        <li>Sử dụng phòng thay đồ, tủ locker</li>
+                        <li>Tham gia lớp tập nhóm</li>
+                    </ul>
+                    <a href="{{ url_for('auth.user_register') }}" class="btn btn-outline-primary w-100 mt-3">Đăng ký
+                        ngay</a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="package-card h-100 p-4 bg-white rounded shadow-sm border-primary border-2">
+                    <div class="badge bg-primary position-absolute top-0 end-0 m-3">Phổ biến</div>
+                    <h4 class="package-name">Gói Premium</h4>
+                    <div class="package-price mb-3">
+                        <span class="price-amount">2,500,000₫</span>
+                        <span class="price-period">/tháng</span>
+                    </div>
+                    <ul class="package-features">
+                        <li>Tất cả quyền lợi Gói Cơ Bản</li>
+                        <li>1 buổi PT cá nhân/tháng</li>
+                        <li>Tư vấn dinh dưỡng miễn phí</li>
+                        <li>Ưu tiên đặt lịch lớp tập nhóm</li>
+                        <li>Quà tặng dụng cụ tập luyện</li>
+                    </ul>
+                    <a href="{{ url_for('auth.user_register') }}" class="btn btn-primary w-100 mt-3">Đăng ký ngay</a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="package-card h-100 p-4 bg-white rounded shadow-sm">
+                    <h4 class="package-name">Gói VIP</h4>
+                    <div class="package-price mb-3">
+                        <span class="price-amount">4,000,000₫</span>
+                        <span class="price-period">/tháng</span>
+                    </div>
+                    <ul class="package-features">
+                        <li>Tất cả quyền lợi Gói Premium</li>
+                        <li>4 buổi PT cá nhân/tháng</li>
+                        <li>Kế hoạch dinh dưỡng cá nhân hóa</li>
+                        <li>Truy cập khu vực VIP riêng</li>
+                        <li>Dịch vụ spa & massage</li>
+                        <li>Hỗ trợ 24/7</li>
+                    </ul>
+                    <a href="{{ url_for('auth.user_register') }}" class="btn btn-outline-primary w-100 mt-3">Đăng ký
+                        ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Branches Section -->
+<section id="branches" class="branches-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Hệ thống chi nhánh</h2>
+            <p class="section-subtitle">Tìm chi nhánh gần bạn nhất</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="branch-card p-4 bg-white rounded shadow-sm h-100">
+                    <h5 class="branch-city mb-3">🏢 Hà Nội</h5>
+                    <p class="branch-address mb-2"><strong>Địa chỉ:</strong> 34 Trần Hưng Đạo, Hoàn Kiếm, Hà Nội</p>
+                    <p class="branch-phone mb-2"><strong>Điện thoại:</strong> +84 24 3825 6789</p>
+                    <p class="branch-time mb-0"><strong>Giờ mở cửa:</strong> 5:00 - 23:00 hàng ngày</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="branch-card p-4 bg-white rounded shadow-sm h-100">
+                    <h5 class="branch-city mb-3">🏢 TP. Hồ Chí Minh</h5>
+                    <p class="branch-address mb-2"><strong>Địa chỉ:</strong> 55 Lê Văn Lương, Nhà Bè, TP.HCM</p>
+                    <p class="branch-phone mb-2"><strong>Điện thoại:</strong> +84 28 3842 1234</p>
+                    <p class="branch-time mb-0"><strong>Giờ mở cửa:</strong> 5:00 - 23:00 hàng ngày</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="branch-card p-4 bg-white rounded shadow-sm h-100">
+                    <h5 class="branch-city mb-3">🏢 Đà Nẵng</h5>
+                    <p class="branch-address mb-2"><strong>Địa chỉ:</strong> 123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng</p>
+                    <p class="branch-phone mb-2"><strong>Điện thoại:</strong> +84 236 3821 567</p>
+                    <p class="branch-time mb-0"><strong>Giờ mở cửa:</strong> 5:00 - 23:00 hàng ngày</p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <p class="text-muted">Và nhiều chi nhánh khác trên toàn quốc. <a href="#" class="text-primary">Xem tất cả
+                    chi nhánh</a></p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section id="contact" class="cta-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center text-white">
+                <h2 class="cta-title mb-3">Sẵn sàng bắt đầu hành trình của bạn?</h2>
+                <p class="cta-subtitle mb-4">Tham gia GYM Beta ngay hôm nay và nhận ưu đãi đặc biệt cho thành viên mới
+                </p>
+                <div class="cta-buttons">
+                    <a href="{{ url_for('auth.user_register') }}" class="btn btn-light btn-lg me-3">Đăng ký ngay</a>
+                    <a href="{{ url_for('auth.user_login') }}" class="btn btn-outline-light btn-lg">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

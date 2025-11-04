@@ -1,0 +1,71 @@
+<header>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="topbar-content">
+                        <span class="topbar-text">🎉 Ưu đãi đặc biệt cho thành viên mới - Giảm 30% tháng đầu tiên</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="topbar-contact">
+                        <span class="topbar-item">📞 Hotline: 1900 1234</span>
+                        <span class="topbar-item d-none d-md-inline">✉️ Email: gymbeta@gmail.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <img src="{{ url_for('static', filename='images/beta_gym_logo.png') }}" alt="GYM Beta Logo" height="60"
+                    class="navbar-logo">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}#about">Về GYM Beta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#branches">Hệ Thống Phòng Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#packages">Gói Thuê PT</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#services">Lớp Tập Nhóm</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Liên Hệ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Tin Tức</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    {% if current_user.is_authenticated %}
+                    <div class="user-greeting d-none d-lg-inline me-2">
+                        <span class="text-muted small">Xin chào,</span>
+                        <strong class="ms-1">{{ current_user.full_name or current_user.username }}</strong>
+                    </div>
+                    <a href="{{ url_for('auth.user_logout') }}" class="btn-logout">Đăng xuất</a>
+                    {% else %}
+                    <a href="{{ url_for('auth.user_login') }}" class="btn-login">Đăng nhập</a>
+                    <a href="{{ url_for('auth.user_register') }}" class="btn-register">Đăng ký</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
