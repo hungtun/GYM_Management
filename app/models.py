@@ -17,9 +17,10 @@ class BaseModel(db.Model):
 # ===== BẢNG ROLE =====
 class Role(BaseModel):
     name = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(200))
-
     users = db.relationship("User", back_populates="role")
+    
+    def __repr__(self):
+        return self.name
 
 
 # ===== BẢNG USER CHUNG =====
@@ -27,9 +28,10 @@ class User(UserMixin, BaseModel):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    full_name = db.Column(db.String(120))
+    first_name = db.Column(db.String(60))
+    last_name = db.Column(db.String(60))
     gender = db.Column(db.String(10))
-    birth_year = db.Column(db.Integer)
+    birth_day = db.Column(db.Date)
     phone = db.Column(db.String(20))
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
 

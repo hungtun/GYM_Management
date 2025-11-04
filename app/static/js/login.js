@@ -34,11 +34,12 @@ document.addEventListener("DOMContentLoaded", function () {
         userNameError.textContent = "Vui lòng nhập tên người dùng";
         userNameInput.classList.add("is-invalid");
         isValid = false;
-      } else if (userName.length < 3) {
-        userNameError.textContent = "Tên người dùng phải có ít nhất 3 ký tự";
-        userNameInput.classList.add("is-invalid");
-        isValid = false;
-      }
+      } 
+      // else if (userName.length < 3) {
+      //   userNameError.textContent = "Tên người dùng phải có ít nhất 3 ký tự";
+      //   userNameInput.classList.add("is-invalid");
+      //   isValid = false;
+      // }
 
       // Validate password
       const password = passwordInput.value;
@@ -46,11 +47,12 @@ document.addEventListener("DOMContentLoaded", function () {
         passwordError.textContent = "Vui lòng nhập mật khẩu";
         passwordInput.classList.add("is-invalid");
         isValid = false;
-      } else if (password.length < 6) {
-        passwordError.textContent = "Mật khẩu phải có ít nhất 6 ký tự";
-        passwordInput.classList.add("is-invalid");
-        isValid = false;
-      }
+      } 
+      // else if (password.length < 6) {
+      //   passwordError.textContent = "Mật khẩu phải có ít nhất 6 ký tự";
+      //   passwordInput.classList.add("is-invalid");
+      //   isValid = false;
+      // }
 
       if (!isValid) {
         e.preventDefault();
