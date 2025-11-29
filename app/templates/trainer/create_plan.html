@@ -1,0 +1,211 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Tạo kế hoạch tập luyện{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exercise-item {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+    }
+
+    .day-toggle-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .day-toggle {
+        border-radius: 999px;
+        font-size: 0.8rem;
+        padding: 0.15rem 0.6rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let exerciseCount = 0;
+
+
+    function addExercise() {
+        exerciseCount++;
+        const container = document.getElementById('exercises-container');
+        const exerciseDiv = document.createElement('div');
+        exerciseDiv.className = 'exercise-item';
+        exerciseDiv.id = `exercise-${exerciseCount}`;
+
+        exerciseDiv.innerHTML = `
+            <div class="row align-items-end">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Bài tập</label>
+                    <select class="form-select" name="exercise_id[]" required>
+                        <option value="">Chọn bài tập</option>
+                        {% for exercise in exercises %}
+                        <option value="{{ exercise.id }}">{{ exercise.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Số hiệp</label>
+                    <input type="number" class="form-control" name="sets[]" min="1" required>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Số lần/hiệp</label>
+                    <input type="number" class="form-control" name="reps[]" min="1" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Ngày tập</label>
+                    <div class="day-toggle-group">
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Mon" id="day_mon_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_mon_${exerciseCount}">T2</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Tue" id="day_tue_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_tue_${exerciseCount}">T3</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Wed" id="day_wed_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_wed_${exerciseCount}">T4</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Thu" id="day_thu_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_thu_${exerciseCount}">T5</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Fri" id="day_fri_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_fri_${exerciseCount}">T6</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Sat" id="day_sat_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_sat_${exerciseCount}">T7</label>
+
+                        <input class="btn-check" type="checkbox" name="days_${exerciseCount}[]" value="Sun" id="day_sun_${exerciseCount}" autocomplete="off">
+                        <label class="btn btn-outline-primary btn-sm day-toggle" for="day_sun_${exerciseCount}">CN</label>
+                    </div>
+                    <input type="hidden" name="days[]" id="days_input_${exerciseCount}">
+                </div>
+                <div class="col-md-1 mb-3">
+                    <button type="button" class="btn btn-danger" onclick="removeExercise(${exerciseCount})">Xóa</button>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(exerciseDiv);
+        updateDaysInput(exerciseCount);
+    }
+
+    function removeExercise(id) {
+        const exerciseDiv = document.getElementById(`exercise-${id}`);
+        if (exerciseDiv) {
+            exerciseDiv.remove();
+        }
+    }
+
+    function updateDaysInput(exerciseId) {
+        const checkboxes = document.querySelectorAll(`input[name="days_${exerciseId}[]"]:checked`);
+        const daysInput = document.getElementById(`days_input_${exerciseId}`);
+        if (daysInput) {
+            daysInput.value = Array.from(checkboxes).map(cb => cb.value).join(',');
+        }
+    }
+
+    // Update days input when checkboxes change
+    document.addEventListener('change', function (e) {
+        if (e.target.name && e.target.name.startsWith('days_')) {
+            const exerciseId = e.target.name.match(/\d+/)[0];
+            updateDaysInput(exerciseId);
+        }
+    });
+
+    // Form validation
+    document.getElementById('planForm').addEventListener('submit', function (e) {
+        const daysInputs = document.querySelectorAll('input[name="days[]"]');
+        let hasValidExercise = false;
+
+        daysInputs.forEach(input => {
+            if (input.value) {
+                hasValidExercise = true;
+            }
+        });
+
+        if (!hasValidExercise) {
+            e.preventDefault();
+            alert('Vui lòng thêm ít nhất một bài tập và chọn ngày tập!');
+            return false;
+        }
+    });
+
+    // Add first exercise on page load
+    window.onload = function () {
+        addExercise();
+    };
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Tạo kế hoạch tập luyện mới</h2>
+        <a href="{{ url_for('trainer.dashboard') }}" class="btn btn-secondary">
+            ← Quay lại
+        </a>
+    </div>
+
+    <form id="planForm" method="POST" action="{{ url_for('trainer.create_plan') }}">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Chọn hội viên</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="member_id" class="form-label">Hội viên <span class="text-danger">*</span></label>
+                    <select class="form-select" id="member_id" name="member_id" required>
+                        <option value="">-- Chọn hội viên --</option>
+                        {% for member in members %}
+                        <option value="{{ member.id }}" {% if selected_member_id and
+                            selected_member_id|string==member.id|string %}selected{% endif %}>
+                            {{ member.user.first_name or '' }} {{ member.user.last_name or '' }}
+                            ({{ member.user.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Danh sách bài tập</h5>
+                <button type="button" class="btn btn-success btn-sm" onclick="addExercise()">
+                    ➕ Thêm bài tập
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="exercises-container">
+                    <!-- Exercises will be added here by JavaScript -->
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>Lưu ý:</strong> Vui lòng thêm ít nhất một bài tập và chọn ngày tập cho mỗi bài.
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">💾 Lưu kế hoạch</button>
+            <a href="{{ url_for('trainer.plans') }}" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -38,13 +38,13 @@ def user_login():
                 return redirect(url_for('main.index'))
             elif role_name == 'trainer':
                 login_user(user_account)
-                return redirect(url_for('main.index'))  # TODO: update redirect when trainer route is created
+                return redirect(url_for('trainer.dashboard'))  
             elif role_name == 'admin':
                 login_user(user_account)
                 return redirect(url_for('admin.index'))
             elif role_name == 'receptionist':
                 login_user(user_account)
-                return redirect('/receptionist')  # TODO: update redirect when receptionist route is created
+                return redirect('/receptionist')  
             else:
                 err_msg = "Tài khoản không có quyền truy cập"
         else:

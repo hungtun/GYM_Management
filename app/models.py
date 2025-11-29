@@ -34,6 +34,7 @@ class User(UserMixin, BaseModel):
     birth_day = db.Column(db.Date)
     phone = db.Column(db.String(20))
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    avatar_url = db.Column(db.String(255))
 
     role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
     role = db.relationship("Role", back_populates="users")
@@ -116,7 +117,6 @@ class Exercise(BaseModel):
 class TrainingPlan(BaseModel):
     trainer_id = db.Column(db.Integer, db.ForeignKey("trainer.id"), nullable=False)
     member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     trainer = db.relationship("Trainer", back_populates="training_plans")
     member = db.relationship("Member")

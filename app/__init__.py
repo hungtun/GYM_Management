@@ -21,9 +21,14 @@ def create_app():
     from .routes import main
     from .auth.routes import auth
     from .member.routes import member
+    from .user import user
+    from .trainer.routes import trainer
+    
     app.register_blueprint(main)
     app.register_blueprint(auth)
     app.register_blueprint(member)
+    app.register_blueprint(user)
+    app.register_blueprint(trainer)
 
     # Initialize admin after blueprints
     init_admin(app)
