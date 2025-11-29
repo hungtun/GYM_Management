@@ -1,4 +1,5 @@
 <header>
+    {% if not current_user.is_authenticated %}
     <!-- Top bar -->
     <div class="topbar">
         <div class="container">
@@ -17,6 +18,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
@@ -33,6 +35,36 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a>
+                    </li>
+                    {% if current_user.trainer_profile %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer.dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer.members') }}">Hội viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer.plans') }}">Kế hoạch</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('trainer.create_plan') }}">Tạo kế hoạch</a>
+                    </li>
+                    {% elif current_user.role and current_user.role.name and current_user.role.name.lower() == 'admin'
+                    %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link"
+                            href="{{ url_for('member.dashboard', _external=False) if current_user.member_profile else url_for('main.home') }}">Bảng
+                            điều khiển</a>
+                    </li>
+                    {% endif %}
+                    {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}#about">Về GYM Beta</a>
                     </li>
@@ -51,21 +83,40 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#">Tin Tức</a>
                     </li>
+                    {% endif %}
                 </ul>
 
                 <div class="d-flex align-items-center gap-3 ms-auto">
                     {% if current_user.is_authenticated %}
-                    <div class="user-greeting d-none d-lg-inline me-2">
-                        <span class="text-muted small">Xin chào,</span>
-                        <strong class="ms-1">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2"
+                            type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if current_user.avatar_url %}
+                            <img src="{{ current_user.avatar_url }}" alt="Avatar"
+                                style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+                            {% endif %}
                             {% if current_user.first_name or current_user.last_name %}
                             {{ current_user.first_name or '' }} {{ current_user.last_name or '' }}
                             {% else %}
                             {{ current_user.username }}
                             {% endif %}
-                        </strong>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="{{ url_for('user.profile') }}">Hồ sơ cá nhân</a></li>
+                            {% if current_user.trainer_profile %}
+                            <li><a class="dropdown-item" href="{{ url_for('trainer.dashboard') }}">Trang huấn luyện
+                                    viên</a></li>
+                            {% elif current_user.role and current_user.role.name and current_user.role.name.lower() ==
+                            'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Trang quản trị</a></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.user_logout') }}">Đăng
+                                    xuất</a></li>
+                        </ul>
                     </div>
-                    <a href="{{ url_for('auth.user_logout') }}" class="btn-logout">Đăng xuất</a>
                     {% else %}
                     <a href="{{ url_for('auth.user_login') }}" class="btn-login">Đăng nhập</a>
                     <a href="{{ url_for('auth.user_register') }}" class="btn-register">Đăng ký</a>

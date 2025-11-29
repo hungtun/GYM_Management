@@ -1,0 +1,167 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Danh sách kế hoạch tập luyện{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plan-list-item {
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .plan-meta {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .filter-chip {
+        background: #eef2ff;
+        color: #4338ca;
+        border-radius: 999px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .plan-actions .btn {
+        min-width: 70px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.25rem 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Danh sách kế hoạch tập luyện</h2>
+            <p class="text-muted mb-0">{{ total_plans }} kế hoạch</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('trainer.create_plan') }}" class="btn btn-primary">
+                ➕ Tạo kế hoạch mới
+            </a>
+            <a href="{{ url_for('trainer.dashboard') }}" class="btn btn-outline-secondary">
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <form class="row g-3 align-items-end mb-4" method="get">
+        <div class="col-md-4">
+            <label class="form-label">Lọc theo hội viên</label>
+            <select class="form-select" name="member_id">
+                <option value="">-- Tất cả --</option>
+                {% for member in managed_members %}
+                <option value="{{ member.id }}" {% if member_filter==member.id %}selected{% endif %}>
+                    {{ member.user.first_name or '' }} {{ member.user.last_name or '' }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Áp dụng</button>
+            {% if member_filter %}
+            <a href="{{ url_for('trainer.plans') }}" class="btn btn-outline-secondary">Bỏ lọc</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if member_filter %}
+    <div class="mb-3">
+        <span class="filter-chip">
+            Đang lọc theo hội viên #{{ member_filter }}
+        </span>
+    </div>
+    {% endif %}
+
+    {% if plans %}
+    {% for plan in plans %}
+    <div class="plan-list-item">
+        <div>
+            <h5 class="mb-1">{{ plan.member.user.first_name or '' }} {{ plan.member.user.last_name or '' }}</h5>
+            <div class="plan-meta">
+                Ngày tạo: {{ plan.created_at.strftime('%d/%m/%Y') }} &middot;
+                {{ plan.details|length }} bài tập
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('trainer.plan_detail', plan_id=plan.id) }}"
+                class="btn btn-sm btn-outline-primary">Xem</a>
+            <a href="{{ url_for('trainer.edit_plan', plan_id=plan.id) }}" class="btn btn-sm btn-outline-warning">Sửa</a>
+            <form method="POST" action="{{ url_for('trainer.delete_plan', plan_id=plan.id) }}"
+                onsubmit="return confirm('Bạn có chắc chắn muốn xóa kế hoạch này?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% set start_item = ((page - 1) * page_size) + 1 %}
+    {% set end_item = (page * page_size) if (page * page_size) < total_plans else total_plans %} <div
+        class="d-flex flex-wrap justify-content-between align-items-center mt-3 text-muted small">
+        <span>Hiển thị {{ start_item }} - {{ end_item }} trên tổng {{ total_plans }} kế hoạch</span>
+</div>
+
+{% if total_pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link"
+                href="{{ url_for('trainer.plans', page=page-1, member_id=member_filter if member_filter else None) }}"
+                aria-label="Previous">
+                &laquo;
+            </a>
+        </li>
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link"
+                href="{{ url_for('trainer.plans', page=p, member_id=member_filter if member_filter else None) }}">
+                {{ p }}
+            </a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link"
+                href="{{ url_for('trainer.plans', page=page+1, member_id=member_filter if member_filter else None) }}"
+                aria-label="Next">
+                &raquo;
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+<div class="alert alert-info text-center">
+    <p class="mb-3">Chưa có kế hoạch nào.</p>
+    <a href="{{ url_for('trainer.create_plan') }}" class="btn btn-primary">
+        Tạo kế hoạch đầu tiên
+    </a>
+</div>
+{% endif %}
+</div>
+{% endblock %}

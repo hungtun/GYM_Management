@@ -1,0 +1,105 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Chi tiết kế hoạch tập luyện{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Chi tiết kế hoạch tập luyện</h2>
+        <div>
+            <a href="{{ url_for('trainer.edit_plan', plan_id=plan.id) }}" class="btn btn-warning">
+                ✏️ Sửa kế hoạch
+            </a>
+            
+            <form method="POST" action="{{ url_for('trainer.delete_plan', plan_id=plan.id) }}" style="display:inline;"
+                onsubmit="return confirm('Bạn chắc chắn muốn xóa kế hoạch này?');">
+                <button type="submit" class="btn btn-danger">
+                    🗑 Xóa kế hoạch
+                </button>
+            </form>
+
+            <a href="{{ url_for('trainer.plans') }}" class="btn btn-secondary">
+                ← Danh sách kế hoạch
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin kế hoạch</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Hội viên:</strong>
+                        {{ plan.member.user.first_name or '' }} {{ plan.member.user.last_name or '' }}
+                    </p>
+                    <p><strong>Email:</strong> {{ plan.member.user.email }}</p>
+                    <p><strong>Số điện thoại:</strong> {{ plan.member.user.phone or 'Chưa có' }}</p>
+                    <p><strong>Ngày tạo:</strong> {{ plan.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Danh sách bài tập</h5>
+        </div>
+        <div class="card-body">
+            {% if plan.details %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Bài tập</th>
+                            <th>Số hiệp</th>
+                            <th>Số lần/hiệp</th>
+                            <th>Ngày tập</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in plan.details %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ detail.exercise.name }}</strong>
+                                {% if detail.exercise.description %}
+                                <br><small class="text-muted">{{ detail.exercise.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ detail.sets }}</td>
+                            <td class="text-center">{{ detail.reps }}</td>
+                            <td>
+                                {% set days = detail.days_of_week.split(',') if detail.days_of_week else [] %}
+                                {% set day_names = {'Mon': 'Thứ 2', 'Tue': 'Thứ 3', 'Wed': 'Thứ 4', 'Thu': 'Thứ 5',
+                                'Fri': 'Thứ 6', 'Sat': 'Thứ 7', 'Sun': 'Chủ nhật'} %}
+                                {% for day in days %}
+                                <span class="badge bg-primary me-1">{{ day_names.get(day.strip(), day.strip()) }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">Kế hoạch chưa có bài tập nào.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

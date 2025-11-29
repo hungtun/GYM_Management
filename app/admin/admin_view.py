@@ -178,13 +178,13 @@ class ExerciseView(AdminModelView):
 
 
 class TrainingPlanView(AdminModelView):
-    column_list = ['id', 'trainer', 'member', 'date_created']
+    column_list = ['id', 'trainer', 'member']
     column_searchable_list = ['trainer.user.username', 'member.user.username']
-    column_filters = ['date_created']
+    column_filters = ['created_at']
     column_labels = {
         'trainer': 'Huấn luyện viên',
         'member': 'Hội viên',
-        'date_created': 'Ngày tạo'
+        'created_at': 'Ngày tạo'
     }
 
 
@@ -233,19 +233,20 @@ def init_admin(app):
         index_view=MyAdminIndexView(name='Trang chủ', endpoint='admin', url='/admin')
     )
     
-    admin.add_view(UserView(User, db.session, name='Người dùng', category='Quản lý người dùng'))
-    admin.add_view(RoleView(Role, db.session, name='Vai trò', category='Quản lý người dùng'))
-    admin.add_view(MemberView(Member, db.session, name='Hội viên', category='Quản lý người dùng'))
-    admin.add_view(TrainerView(Trainer, db.session, name='Huấn luyện viên', category='Quản lý người dùng'))
-    admin.add_view(ReceptionistView(Receptionist, db.session, name='Lễ tân', category='Quản lý người dùng'))
+    # Add views với endpoint name rõ ràng
+    admin.add_view(UserView(User, db.session, name='Người dùng', endpoint='admin_user', category='Quản lý người dùng'))
+    admin.add_view(RoleView(Role, db.session, name='Vai trò', endpoint='admin_role', category='Quản lý người dùng'))
+    admin.add_view(MemberView(Member, db.session, name='Hội viên', endpoint='admin_member', category='Quản lý người dùng'))
+    admin.add_view(TrainerView(Trainer, db.session, name='Huấn luyện viên', endpoint='admin_trainer', category='Quản lý người dùng'))
+    admin.add_view(ReceptionistView(Receptionist, db.session, name='Lễ tân', endpoint='admin_receptionist', category='Quản lý người dùng'))
     
-    admin.add_view(GymPackageView(GymPackage, db.session, name='Gói tập', category='Quản lý dịch vụ'))
-    admin.add_view(MembershipView(Membership, db.session, name='Thẻ hội viên', category='Quản lý dịch vụ'))
-    admin.add_view(PaymentView(Payment, db.session, name='Thanh toán', category='Quản lý dịch vụ'))
+    admin.add_view(GymPackageView(GymPackage, db.session, name='Gói tập', endpoint='admin_package', category='Quản lý dịch vụ'))
+    admin.add_view(MembershipView(Membership, db.session, name='Thẻ hội viên', endpoint='admin_membership', category='Quản lý dịch vụ'))
+    admin.add_view(PaymentView(Payment, db.session, name='Thanh toán', endpoint='admin_payment', category='Quản lý dịch vụ'))
     
-    admin.add_view(ExerciseView(Exercise, db.session, name='Bài tập', category='Quản lý tập luyện'))
-    admin.add_view(TrainingPlanView(TrainingPlan, db.session, name='Kế hoạch tập', category='Quản lý tập luyện'))
-    admin.add_view(ModelView(TrainingDetail, db.session, name='Chi tiết kế hoạch', category='Quản lý tập luyện'))
+    admin.add_view(ExerciseView(Exercise, db.session, name='Bài tập', endpoint='admin_exercise', category='Quản lý tập luyện'))
+    admin.add_view(TrainingPlanView(TrainingPlan, db.session, name='Kế hoạch tập', endpoint='admin_training_plan', category='Quản lý tập luyện'))
+    admin.add_view(ModelView(TrainingDetail, db.session, name='Chi tiết kế hoạch', endpoint='admin_training_detail', category='Quản lý tập luyện'))
     
     admin.add_view(AdminLogoutView(name='Đăng xuất', endpoint='admin_logout', category='Tiện ích'))
     
