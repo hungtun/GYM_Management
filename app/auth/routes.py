@@ -38,7 +38,7 @@ def user_login():
                 return redirect(url_for('member_bp.dashboard'))
             elif role_name == 'trainer':
                 login_user(user_account)
-                return redirect(url_for('main.index'))  # TODO: update redirect when trainer route is created
+                return redirect(url_for('trainer.dashboard'))
             elif role_name == 'admin':
                 login_user(user_account)
                 return redirect(url_for('admin.index'))

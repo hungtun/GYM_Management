@@ -4,9 +4,9 @@ from app.models import GymPackage, Member, Membership, Payment
 from app.extensions import db
 from datetime import datetime, timedelta, timezone
 
-member = Blueprint('member_bp', __name__, url_prefix='/member')
+member = Blueprint('member', __name__, url_prefix='/member')
 
-@member.route('/dashboard')
+@member.route('/')
 @login_required
 def dashboard():
     """Member dashboard - hiển thị thông tin hội viên và gói tập hiện tại"""

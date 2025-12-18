@@ -1,0 +1,231 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Dashboard - Huấn luyện viên{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-radius: 14px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        min-height: 150px;
+    }
+
+    .stat-link {
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .stats-card .link-label {
+        font-size: 0.9rem;
+        margin-top: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.85;
+    }
+
+    .welcome-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-section::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("https://www.transparenttextures.com/patterns/cubes.png");
+        opacity: 0.15;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        border: 1px solid #e7e7e7;
+        background: #fff;
+        text-decoration: none;
+        color: #1f2937;
+        transition: transform 0.15s, border 0.15s;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-4px);
+        border-color: #d0d0d0;
+    }
+
+    .action-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: #f3f4f6;
+    }
+
+    .plan-list-item {
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .plan-meta {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .plan-actions .btn {
+        min-width: 70px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <h1 class="mb-2">Xin chào, {{ user.first_name or '' }} {{ user.last_name or '' }}!</h1>
+        <p class="mb-0">Chào mừng đến với trang quản lý của huấn luyện viên</p>
+        {% if trainer.specialization %}
+        <p class="mb-0 mt-2"><strong>Chuyên môn:</strong> {{ trainer.specialization }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('trainer.members') }}" class="stat-link">
+                <div class="card stats-card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-white-50">Hội viên bạn đang quản lý</h6>
+                                <h2 class="card-title mb-0">{{ stats.total_members }}</h2>
+                            </div>
+                            <div class="fs-1">👥</div>
+                        </div>
+                        <div class="link-label">Xem danh sách <span>→</span></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('trainer.plans') }}" class="stat-link">
+                <div class="card stats-card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-white-50">Tổng số kế hoạch</h6>
+                                <h2 class="card-title mb-0">{{ stats.total_plans }}</h2>
+                            </div>
+                            <div class="fs-1">📋</div>
+                        </div>
+                        <div class="link-label">Quản lý kế hoạch <span>→</span></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('trainer.create_plan') }}" class="stat-link">
+                <div class="card stats-card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-white-50">Kế hoạch mới trong tuần</h6>
+                                <h2 class="card-title mb-0">{{ stats.recent_plans|length }}</h2>
+                            </div>
+                            <div class="fs-1">⚡</div>
+                        </div>
+                        <div class="link-label">Tạo kế hoạch mới <span>→</span></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+
+
+    <!-- Recent Plans -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Kế hoạch gần đây</h5>
+                    <a href="{{ url_for('trainer.plans') }}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    {% if stats.recent_plans %}
+                    {% for plan in stats.recent_plans %}
+                    <div class="plan-list-item">
+                        <div>
+                            <h6 class="mb-1">{{ plan.member.user.first_name or '' }} {{ plan.member.user.last_name or ''
+                                }}</h6>
+                            <div class="plan-meta">
+                                Ngày tạo: {{ plan.created_at.strftime('%d/%m/%Y') }} ·
+                                {{ plan.details|length }} bài tập
+                            </div>
+                        </div>
+                        <div class="plan-actions d-flex gap-2">
+                            <a href="{{ url_for('trainer.plan_detail', plan_id=plan.id) }}"
+                                class="btn btn-sm btn-outline-primary">Xem</a>
+                            <a href="{{ url_for('trainer.edit_plan', plan_id=plan.id) }}"
+                                class="btn btn-sm btn-outline-warning">Sửa</a>
+                            <form method="POST" action="{{ url_for('trainer.delete_plan', plan_id=plan.id) }}"
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa kế hoạch này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center py-4">Chưa có kế hoạch nào.
+                        <a href="{{ url_for('trainer.create_plan') }}">Tạo kế hoạch đầu tiên</a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
