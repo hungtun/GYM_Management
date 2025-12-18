@@ -56,11 +56,11 @@
                             {% endif %}
                         {% endif %}
 
-                        <a href="{{ url_for('member_bp.view_packages') }}" class="btn btn-primary mt-2">Gia hạn / Đổi gói</a>
+                        <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary mt-2">Gia hạn / Đổi gói</a>
                     {% else %}
                         <div class="alert alert-warning">
                             <p class="mb-2">Bạn chưa có gói tập nào.</p>
-                            <a href="{{ url_for('member_bp.view_packages') }}" class="btn btn-primary">Chọn gói tập ngay</a>
+                            <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary">Chọn gói tập ngay</a>
                         </div>
                     {% endif %}
                 </div>

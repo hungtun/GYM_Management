@@ -39,7 +39,7 @@
                     {% endif %}
 
                     <div class="mt-auto">
-                        <form method="POST" action="{{ url_for('member_bp.select_package', package_id=package.id) }}">
+                        <form method="POST" action="{{ url_for('member.select_package', package_id=package.id) }}">
                             <button type="submit" class="btn btn-primary w-100">Chọn gói này</button>
                         </form>
                     </div>
@@ -50,7 +50,7 @@
     </div>
 
     <div class="text-center mt-4">
-        <a href="{{ url_for('member_bp.dashboard') }}" class="btn btn-secondary">Quay lại Dashboard</a>
+        <a href="{{ url_for('member.dashboard') }}" class="btn btn-secondary">Quay lại Dashboard</a>
     </div>
 </div>
 

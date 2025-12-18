@@ -53,12 +53,12 @@ def select_package(package_id):
         member = Member.query.filter_by(user_id=current_user.id).first()
         if not member:
             flash('Không tìm thấy thông tin hội viên', 'error')
-            return redirect(url_for('member_bp.view_packages'))
+            return redirect(url_for('member.view_packages'))
 
         package = GymPackage.query.get(package_id)
         if not package:
             flash('Gói tập không tồn tại', 'error')
-            return redirect(url_for('member_bp.view_packages'))
+            return redirect(url_for('member.view_packages'))
 
         # Tạo Membership (chưa active)
         start_date = datetime.now(timezone.utc)
@@ -97,9 +97,9 @@ def select_package(package_id):
         # return redirect(stripe_checkout_url)
 
         # Tạm thời redirect về packages với thông báo
-        return redirect(url_for('member_bp.view_packages'))
+        return redirect(url_for('member.view_packages'))
 
     except Exception as e:
         db.session.rollback()
         flash(f'Lỗi: {str(e)}', 'error')
-        return redirect(url_for('member_bp.view_packages'))
+        return redirect(url_for('member.view_packages'))

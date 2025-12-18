@@ -35,7 +35,7 @@ def user_login():
 
             if role_name == 'member':
                 login_user(user_account)
-                return redirect(url_for('member_bp.dashboard'))
+                return redirect(url_for('member.dashboard'))
             elif role_name == 'trainer':
                 login_user(user_account)
                 return redirect(url_for('trainer.dashboard'))
