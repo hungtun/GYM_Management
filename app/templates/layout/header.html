@@ -36,10 +36,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
                     {% if current_user.is_authenticated %}
+                    {% if current_user.trainer_profile %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a>
                     </li>
-                    {% if current_user.trainer_profile %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('trainer.dashboard') }}">Dashboard</a>
                     </li>
@@ -52,12 +52,20 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('trainer.create_plan') }}">Tạo kế hoạch</a>
                     </li>
+                    {% elif current_user.receptionist_profile %}
+                    <!-- Receptionist has no navigation menu items -->
                     {% elif current_user.role and current_user.role.name and current_user.role.name.lower() == 'admin'
                     %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
                     </li>
                     {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link"
                             href="{{ url_for('member.dashboard', _external=False) if current_user.member_profile else url_for('main.home') }}">Bảng

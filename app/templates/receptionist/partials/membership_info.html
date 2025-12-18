@@ -1,0 +1,19 @@
+{% if membership %}
+<div class="alert alert-info">
+    <h6>Gói: {{ membership.package.name }}</h6>
+    <p>Bắt đầu: {{ membership.start_date.strftime('%d/%m/%Y') }}</p>
+    <p>Hết hạn: {{ membership.end_date.strftime('%d/%m/%Y') if membership.end_date else 'N/A' }}</p>
+    <p>Trạng thái:
+        {% if membership.active %}
+            <span class="badge bg-success">Đang hoạt động</span>
+        {% else %}
+            <span class="badge bg-secondary">Đã hết hạn</span>
+        {% endif %}
+    </p>
+</div>
+{% else %}
+<div class="alert alert-warning">Chưa có gói tập</div>
+{% endif %}
+
+
+

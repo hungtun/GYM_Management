@@ -58,7 +58,7 @@ class UserView(AdminModelView):
             'query_factory': lambda: Role.query.order_by(Role.name)
         }
     }
-    
+
     def on_model_change(self, form, model, is_created):
         if is_created:
             if form.password.data:
@@ -68,16 +68,16 @@ class UserView(AdminModelView):
                 model.password_hash = hashlib.md5(password.encode('utf-8')).hexdigest()
             else:
                 raise ValueError('Vui lòng nhập mật khẩu khi tạo tài khoản mới')
-            
+
             # Set join_date nếu chưa có
             if not model.join_date:
                 model.join_date = datetime.utcnow()
-            
+
             # Tạo profile dựa trên role
             if model.role and model.role.name:
                 role_name = model.role.name.lower()
                 db.session.flush()  # Đảm bảo user có ID
-                
+
                 if role_name == 'member':
                     member = Member(user_id=model.id)
                     db.session.add(member)
@@ -141,7 +141,7 @@ class GymPackageView(AdminModelView):
         'price': 'Giá',
         'description': 'Mô tả'
     }
-
+    form_excluded_columns = ['memberships']
 
 class MembershipView(AdminModelView):
     column_list = ['id', 'member', 'package', 'start_date', 'end_date', 'active']
@@ -199,7 +199,7 @@ class MyAdminIndexView(AdminIndexView):
     def __init__(self, *args, **kwargs):
         super(MyAdminIndexView, self).__init__(*args, **kwargs)
         self.endpoint = 'admin'
-    
+
     @role_required('admin')
     @expose('/')
     def index(self):
@@ -208,14 +208,14 @@ class MyAdminIndexView(AdminIndexView):
         total_trainers = Trainer.query.count()
         total_packages = GymPackage.query.count()
         active_memberships = Membership.query.filter_by(active=True).count()
-        
+
         stats = {
             'total_members': total_members,
             'total_trainers': total_trainers,
             'total_packages': total_packages,
             'active_memberships': active_memberships
         }
-        
+
         return self.render('admin/index.html', stats=stats)
 
 class RoleView(AdminModelView):
@@ -232,24 +232,24 @@ def init_admin(app):
         name='GYM Beta Admin',
         index_view=MyAdminIndexView(name='Trang chủ', endpoint='admin', url='/admin')
     )
-    
-    # Add views với endpoint name rõ ràng
+
+    # Add views with explicit endpoint names
     admin.add_view(UserView(User, db.session, name='Người dùng', endpoint='admin_user', category='Quản lý người dùng'))
     admin.add_view(RoleView(Role, db.session, name='Vai trò', endpoint='admin_role', category='Quản lý người dùng'))
     admin.add_view(MemberView(Member, db.session, name='Hội viên', endpoint='admin_member', category='Quản lý người dùng'))
     admin.add_view(TrainerView(Trainer, db.session, name='Huấn luyện viên', endpoint='admin_trainer', category='Quản lý người dùng'))
     admin.add_view(ReceptionistView(Receptionist, db.session, name='Lễ tân', endpoint='admin_receptionist', category='Quản lý người dùng'))
-    
+
     admin.add_view(GymPackageView(GymPackage, db.session, name='Gói tập', endpoint='admin_package', category='Quản lý dịch vụ'))
     admin.add_view(MembershipView(Membership, db.session, name='Thẻ hội viên', endpoint='admin_membership', category='Quản lý dịch vụ'))
     admin.add_view(PaymentView(Payment, db.session, name='Thanh toán', endpoint='admin_payment', category='Quản lý dịch vụ'))
-    
+
     admin.add_view(ExerciseView(Exercise, db.session, name='Bài tập', endpoint='admin_exercise', category='Quản lý tập luyện'))
     admin.add_view(TrainingPlanView(TrainingPlan, db.session, name='Kế hoạch tập', endpoint='admin_training_plan', category='Quản lý tập luyện'))
     admin.add_view(ModelView(TrainingDetail, db.session, name='Chi tiết kế hoạch', endpoint='admin_training_detail', category='Quản lý tập luyện'))
-    
+
     admin.add_view(AdminLogoutView(name='Đăng xuất', endpoint='admin_logout', category='Tiện ích'))
-    
+
     return admin
 
 
