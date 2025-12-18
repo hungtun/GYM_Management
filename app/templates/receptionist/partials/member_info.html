@@ -1,0 +1,11 @@
+<div>
+    <p><strong>Họ tên:</strong> {{ member.user.first_name }} {{ member.user.last_name }}</p>
+    <p><strong>Email:</strong> {{ member.user.email }}</p>
+    <p><strong>SĐT:</strong> {{ member.user.phone or 'N/A' }}</p>
+    <p><strong>Ngày sinh:</strong> {{ member.user.birth_day.strftime('%d/%m/%Y') if member.user.birth_day else 'N/A' }}</p>
+    <p><strong>Giới tính:</strong> {{ member.user.gender or 'N/A' }}</p>
+    <p><strong>Ngày đăng ký:</strong> {{ member.register_date.strftime('%d/%m/%Y') if member.register_date else 'N/A' }}</p>
+</div>
+
+
+

@@ -35,7 +35,7 @@ def user_login():
 
             if role_name == 'member':
                 login_user(user_account)
-                return redirect(url_for('main.index'))
+                return redirect(url_for('member_bp.dashboard'))
             elif role_name == 'trainer':
                 login_user(user_account)
                 return redirect(url_for('main.index'))  # TODO: update redirect when trainer route is created
@@ -44,7 +44,7 @@ def user_login():
                 return redirect(url_for('admin.index'))
             elif role_name == 'receptionist':
                 login_user(user_account)
-                return redirect('/receptionist')  # TODO: update redirect when receptionist route is created
+                return redirect(url_for('receptionist_bp.dashboard'))
             else:
                 err_msg = "Tài khoản không có quyền truy cập"
         else:
@@ -63,11 +63,12 @@ def user_logout():
 
 @auth.route('/register',  methods=['GET', 'POST'])
 def user_register():
+    from app.models import Member, Role
+    import hashlib
 
-    err_msg = None  
+    err_msg = None
 
     if request.method == 'POST':
-        
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         user_name = request.form.get('user_name')
@@ -77,23 +78,69 @@ def user_register():
         birth_day = request.form.get('birth_day')
         gender = request.form.get('gender')
         confirm = request.form.get('confirm')
+
         try:
-            if password.strip().__eq__(confirm.strip()):
-                add_user_default(first_name=first_name,
-                        last_name=last_name,
-                        user_name= user_name,
-                        password= password,
-                        email=email,
-                        phone_number=phone_number,
-                        gender=gender,
-                        birth_day=datetime.strptime(birth_day, '%Y-%m-%d').date(),
-                        )
-                return redirect(url_for('auth.user_login'))
-            else:
+            # Validate required fields
+            if not all([user_name, password, confirm, email]):
+                err_msg = "Vui lòng điền đầy đủ thông tin bắt buộc"
+                return render_template('auth/register.html', err_msg=err_msg)
+
+            # Validate password match
+            if not password.strip() == confirm.strip():
                 err_msg = "Mật khẩu không khớp"
-                return redirect(url_for('auth.user_login'))
-        except Exception as ex :
-            db.session.rollback() 
-            err_msg = "Could not add user" + str(ex)
-        
-    return render_template('auth/register.html', err_msg = err_msg)
+                return render_template('auth/register.html', err_msg=err_msg)
+
+            # Check for duplicate username or email
+            from app.models import User
+            if User.query.filter_by(username=user_name.strip()).first():
+                err_msg = "Tên đăng nhập đã tồn tại"
+                return render_template('auth/register.html', err_msg=err_msg)
+            if User.query.filter_by(email=email.strip()).first():
+                err_msg = "Email đã tồn tại"
+                return render_template('auth/register.html', err_msg=err_msg)
+
+            # Parse birth_day if provided
+            birth_date = None
+            if birth_day:
+                birth_date = datetime.strptime(birth_day, '%Y-%m-%d').date()
+
+            # Get member role
+            role = Role.query.filter_by(name='member').first()
+            if not role:
+                raise ValueError("Role 'member' không tồn tại trong hệ thống")
+
+            # Hash password
+            password_hash = hashlib.md5(password.strip().encode('utf-8')).hexdigest()
+
+            # Create User (without package - will choose package after login)
+            user = User(
+                username=user_name.strip(),
+                email=email.strip(),
+                password_hash=password_hash,
+                first_name=first_name.strip() if first_name else None,
+                last_name=last_name.strip() if last_name else None,
+                gender=gender,
+                birth_day=birth_date,
+                phone=phone_number.strip() if phone_number else None,
+                role=role
+            )
+            db.session.add(user)
+            db.session.flush()
+
+            # Create Member profile
+            member = Member(user_id=user.id)
+            db.session.add(member)
+
+            db.session.commit()
+
+            flash('Đăng ký thành công! Vui lòng đăng nhập và chọn gói tập.', 'success')
+            return redirect(url_for('auth.user_login'))
+
+        except ValueError as ve:
+            db.session.rollback()
+            err_msg = str(ve)
+        except Exception as ex:
+            db.session.rollback()
+            err_msg = f"Lỗi đăng ký: {str(ex)}"
+
+    return render_template('auth/register.html', err_msg=err_msg)

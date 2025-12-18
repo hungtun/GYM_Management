@@ -1,0 +1,122 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Dashboard - GYM Beta{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Chào mừng, {{ user.first_name }} {{ user.last_name }}!</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Thông tin cá nhân -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin cá nhân</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tên đăng nhập:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Số điện thoại:</strong> {{ user.phone or 'Chưa cập nhật' }}</p>
+                    <p><strong>Ngày sinh:</strong> {{ user.birth_day.strftime('%d/%m/%Y') if user.birth_day else 'Chưa cập nhật' }}</p>
+                    <p><strong>Giới tính:</strong> {{ user.gender or 'Chưa cập nhật' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gói tập hiện tại -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Gói tập hiện tại</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_membership %}
+                        <h6 class="text-success">{{ active_membership.package.name }}</h6>
+                        <p><strong>Thời hạn:</strong> {{ active_membership.package.duration_months }} tháng</p>
+                        <p><strong>Ngày bắt đầu:</strong> {{ active_membership.start_date.strftime('%d/%m/%Y') }}</p>
+                        <p><strong>Ngày hết hạn:</strong> {{ active_membership.end_date.strftime('%d/%m/%Y') if active_membership.end_date else 'N/A' }}</p>
+
+                        {% if active_membership.end_date %}
+                            {% set days_left = (active_membership.end_date.date() - now().date()).days %}
+                            {% if days_left > 0 %}
+                                <p class="text-success"><strong>Còn lại:</strong> {{ days_left }} ngày</p>
+                            {% else %}
+                                <p class="text-danger"><strong>Trạng thái:</strong> Đã hết hạn</p>
+                            {% endif %}
+                        {% endif %}
+
+                        <a href="{{ url_for('member_bp.view_packages') }}" class="btn btn-primary mt-2">Gia hạn / Đổi gói</a>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <p class="mb-2">Bạn chưa có gói tập nào.</p>
+                            <a href="{{ url_for('member_bp.view_packages') }}" class="btn btn-primary">Chọn gói tập ngay</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử thanh toán (nếu có) -->
+    {% if member %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Lịch sử thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    {% if member.payments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Số tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in member.payments %}
+                                    <tr>
+                                        <td>{{ payment.payment_date.strftime('%d/%m/%Y %H:%M') if payment.payment_date else 'Chưa thanh toán' }}</td>
+                                        <td>{{ "{:,.0f}".format(payment.amount) }} VNĐ</td>
+                                        <td>
+                                            {% if payment.status == 'PAID' %}
+                                                <span class="badge bg-success">Đã thanh toán</span>
+                                            {% elif payment.status == 'PENDING' %}
+                                                <span class="badge bg-warning">Chờ thanh toán</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Thất bại</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ payment.note or 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Chưa có giao dịch nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+

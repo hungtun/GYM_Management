@@ -2,23 +2,22 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from sqlalchemy import Integer, String
 from app.extensions import db
-from datetime import date, time, datetime
+from datetime import date, time, datetime, timezone
 from flask_admin.contrib.sqla import ModelView
 from sqlalchemy.orm import relationship, backref
-from datetime import datetime
 from flask_login import UserMixin
 
 class BaseModel(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 # ===== BẢNG ROLE =====
 class Role(BaseModel):
     name = db.Column(db.String(50), unique=True, nullable=False)
     users = db.relationship("User", back_populates="role")
-    
+
     def __repr__(self):
         return self.name
 
@@ -33,20 +32,20 @@ class User(UserMixin, BaseModel):
     gender = db.Column(db.String(10))
     birth_day = db.Column(db.Date)
     phone = db.Column(db.String(20))
-    join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    join_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
     role = db.relationship("Role", back_populates="users")
 
-    member_profile = db.relationship("Member", uselist=False, back_populates="user")
-    trainer_profile = db.relationship("Trainer", uselist=False, back_populates="user")
-    receptionist_profile = db.relationship("Receptionist", uselist=False, back_populates="user")
+    member_profile = db.relationship("Member", uselist=False, back_populates="user", cascade="all, delete-orphan")
+    trainer_profile = db.relationship("Trainer", uselist=False, back_populates="user", cascade="all, delete-orphan")
+    receptionist_profile = db.relationship("Receptionist", uselist=False, back_populates="user", cascade="all, delete-orphan")
 
 
 # ===== HỘI VIÊN =====
 class Member(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    register_date = db.Column(db.DateTime, default=datetime.utcnow)
+    register_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     status = db.Column(db.String(20), default="active")
 
     user = db.relationship("User", back_populates="member_profile")
@@ -88,7 +87,7 @@ class GymPackage(BaseModel):
 class Membership(BaseModel):
     member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
     package_id = db.Column(db.Integer, db.ForeignKey("gym_package.id"), nullable=False)
-    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    start_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     end_date = db.Column(db.DateTime)
     active = db.Column(db.Boolean, default=True)
 
@@ -100,8 +99,14 @@ class Membership(BaseModel):
 class Payment(BaseModel):
     member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    payment_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     note = db.Column(db.String(255))
+
+
+    status = db.Column(db.String(20), default="PAID")
+    txn_ref = db.Column(db.String(100), unique=True)
+    paid_at = db.Column(db.DateTime)
+    raw_response = db.Column(db.Text)
 
     member = db.relationship("Member", back_populates="payments")
 
@@ -116,7 +121,7 @@ class Exercise(BaseModel):
 class TrainingPlan(BaseModel):
     trainer_id = db.Column(db.Integer, db.ForeignKey("trainer.id"), nullable=False)
     member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     trainer = db.relationship("Trainer", back_populates="training_plans")
     member = db.relationship("Member")

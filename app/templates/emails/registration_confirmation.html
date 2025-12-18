@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đăng ký - GYM Beta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .header h2 {
+            color: #007bff;
+            margin: 0;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .info-item {
+            margin: 10px 0;
+        }
+        .info-item strong {
+            color: #555;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h2>Chào mừng đến với GYM Beta!</h2>
+        </div>
+
+        <div class="content">
+            <p>Xin chào <strong>{{ user.first_name }} {{ user.last_name }}</strong>,</p>
+
+            <p>Cảm ơn bạn đã đăng ký thành viên tại GYM Beta. Thông tin đăng ký của bạn:</p>
+
+            <div class="info-box">
+                <h3>Thông tin đăng ký:</h3>
+                <div class="info-item">
+                    <strong>Gói tập:</strong> {{ package.name }}
+                </div>
+                <div class="info-item">
+                    <strong>Thời hạn:</strong> {{ package.duration_months }} tháng
+                </div>
+                <div class="info-item">
+                    <strong>Ngày bắt đầu:</strong> {{ membership.start_date.strftime('%d/%m/%Y') }}
+                </div>
+                <div class="info-item">
+                    <strong>Ngày hết hạn:</strong> {{ membership.end_date.strftime('%d/%m/%Y') if membership.end_date else 'N/A' }}
+                </div>
+                <div class="info-item">
+                    <strong>Giá:</strong> {{ "{:,.0f}".format(package.price) }} VNĐ
+                </div>
+            </div>
+
+            <p>Bạn có thể đăng nhập vào hệ thống bằng:</p>
+            <ul>
+                <li><strong>Tên đăng nhập:</strong> {{ user.username }}</li>
+                <li><strong>Email:</strong> {{ user.email }}</li>
+            </ul>
+
+            <p>Chúc bạn có những buổi tập luyện hiệu quả tại GYM Beta!</p>
+        </div>
+
+        <div class="footer">
+            <p>Email này được gửi tự động từ hệ thống GYM Beta.<br>
+            Vui lòng không trả lời email này.</p>
+            <p>&copy; 2024 GYM Beta. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
