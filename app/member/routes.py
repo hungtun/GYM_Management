@@ -76,7 +76,7 @@ def _check_and_activate_pending_memberships(member_id):
 @login_required
 def view_packages():
     """Trang xem và chọn các gói tập"""
-    packages = GymPackage.query.all()
+    packages = GymPackage.query.filter_by(package_type='GYM').all()
     member = Member.query.filter_by(user_id=current_user.id).first()
 
     # Kiểm tra xem member đã có gói chưa
@@ -92,6 +92,51 @@ def view_packages():
                          packages=packages,
                          has_active_package=has_active_package)
 
+
+@member.route('/pt-packages')
+@login_required
+def view_pt_packages():
+    """Trang xem và chọn các gói PT (Personal Trainer)"""
+    packages = GymPackage.query.filter_by(package_type='PT').all()
+    member = Member.query.filter_by(user_id=current_user.id).first()
+
+    # Check if member has ACTIVE GYM package (required to purchase PT)
+    has_gym_package = False
+    if member:
+        now = datetime.now(timezone.utc)
+
+        # Find GYM packages that are active OR still valid
+        gym_memberships = Membership.query.join(
+            GymPackage, Membership.package_id == GymPackage.id
+        ).filter(
+            Membership.member_id == member.id,
+            GymPackage.package_type == 'GYM'
+        ).all()
+
+        # Check if any GYM membership is still valid
+        for membership in gym_memberships:
+            end_date = membership.end_date
+            if end_date and end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=timezone.utc)
+
+            if membership.active or (end_date and end_date > now):
+                has_gym_package = True
+                break
+
+    # Kiểm tra xem member đã có gói PT chưa
+    has_active_package = False
+    if member:
+        active_membership = Membership.query.filter_by(
+            member_id=member.id,
+            active=True
+        ).first()
+        has_active_package = active_membership is not None
+
+    return render_template('member/pt_packages.html',
+                         packages=packages,
+                         has_active_package=has_active_package,
+                         has_gym_package=has_gym_package)
+
 @member.route('/create-checkout-session/<int:package_id>', methods=['POST'])
 @login_required
 def create_checkout_session(package_id):
@@ -106,6 +151,33 @@ def create_checkout_session(package_id):
         if not package:
             flash('Gói tập không tồn tại', 'error')
             return redirect(url_for('member.view_packages'))
+
+        # If trying to buy PT package, check if member has ACTIVE GYM package first
+        if package.package_type == 'PT':
+            now = datetime.now(timezone.utc)
+
+            # Find GYM packages that are active OR still valid
+            gym_memberships = Membership.query.join(
+                GymPackage, Membership.package_id == GymPackage.id
+            ).filter(
+                Membership.member_id == member_obj.id,
+                GymPackage.package_type == 'GYM'
+            ).all()
+
+            # Check if any GYM membership is still valid
+            has_valid_gym = False
+            for membership in gym_memberships:
+                end_date = membership.end_date
+                if end_date and end_date.tzinfo is None:
+                    end_date = end_date.replace(tzinfo=timezone.utc)
+
+                if membership.active or (end_date and end_date > now):
+                    has_valid_gym = True
+                    break
+
+            if not has_valid_gym:
+                flash('Bạn cần có gói tập GYM đang hoạt động để đăng ký gói PT!', 'error')
+                return redirect(url_for('member.view_packages'))
 
         # Import Stripe service
         from app.services.stripe_service import create_checkout_session as create_stripe_session

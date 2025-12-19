@@ -92,16 +92,22 @@ def handle_checkout_session_completed(session):
 
         now = datetime.now(timezone.utc)
 
-        # Find the latest membership (by end_date) regardless of active status
-        # This ensures we stack packages correctly even if there are pending ones
-        latest_membership = Membership.query.filter_by(
-            member_id=member_id
+        # Find the latest membership (by end_date) of the SAME package type
+        # This ensures PT and GYM packages are independent
+        latest_membership = Membership.query.join(
+            GymPackage, Membership.package_id == GymPackage.id
+        ).filter(
+            Membership.member_id == member_id,
+            GymPackage.package_type == package.package_type
         ).order_by(Membership.end_date.desc()).first()
 
-        # Check for currently active membership
-        active_membership = Membership.query.filter_by(
-            member_id=member_id,
-            active=True
+        # Check for currently active membership of the SAME package type
+        active_membership = Membership.query.join(
+            GymPackage, Membership.package_id == GymPackage.id
+        ).filter(
+            Membership.member_id == member_id,
+            Membership.active == True,
+            GymPackage.package_type == package.package_type
         ).first()
 
         # Calculate start and end dates

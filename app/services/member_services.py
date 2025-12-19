@@ -148,18 +148,50 @@ def add_package_to_member(member_id, package_id, payment_method="Thanh toán t�
     if not package:
         raise ValueError("Gói tập không tồn tại")
 
+    # If trying to add PT package, check if member has ACTIVE GYM package
+    if package.package_type == 'PT':
+        now = datetime.now(timezone.utc)
+
+        # Find GYM package that is active OR still valid (end_date > now)
+        gym_membership = Membership.query.join(
+            GymPackage, Membership.package_id == GymPackage.id
+        ).filter(
+            Membership.member_id == member_id,
+            GymPackage.package_type == 'GYM'
+        ).all()
+
+        # Check if any GYM membership is still valid
+        has_valid_gym = False
+        for membership in gym_membership:
+            end_date = membership.end_date
+            if end_date and end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=timezone.utc)
+
+            if membership.active or (end_date and end_date > now):
+                has_valid_gym = True
+                break
+
+        if not has_valid_gym:
+            raise ValueError("Hội viên cần có gói tập GYM đang hoạt động để đăng ký gói PT!")
+
     now = datetime.now(timezone.utc)
 
-    # Find the latest membership (by end_date) regardless of active status
-    # This ensures we stack packages correctly even if there are pending ones
-    latest_membership = Membership.query.filter_by(
-        member_id=member_id
+    # Find the latest membership (by end_date) of the SAME package type
+    # This ensures PT and GYM packages are independent
+    latest_membership = Membership.query.join(
+        GymPackage, Membership.package_id == GymPackage.id
+    ).filter(
+        Membership.member_id == member_id,
+        GymPackage.package_type == package.package_type
     ).order_by(Membership.end_date.desc()).first()
 
-    # Check for currently active membership
-    active_membership = Membership.query.filter_by(
-        member_id=member_id,
-        active=True
+    # Check for currently active membership of the SAME package type
+    active_membership = Membership.query.join(
+        GymPackage, Membership.package_id == GymPackage.id
+    ).filter(
+        Membership.member_id == member_id,
+        Membership.active == True,
+        GymPackage.package_type == package.package_type
     ).first()
 
     # Calculate start and end dates

@@ -1,0 +1,102 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Chọn gói PT - GYM Beta{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Chọn gói PT phù hợp với bạn</h2>
+    <p class="text-center text-muted mb-5">
+        Huấn luyện cá nhân 1-1 với huấn luyện viên chuyên nghiệp, giúp bạn đạt mục tiêu nhanh chóng
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if not has_gym_package %}
+    <div class="alert alert-danger text-center">
+        <h4><i class="bi bi-exclamation-triangle"></i> Yêu cầu có gói GYM</h4>
+        <p class="mb-3">Bạn cần đăng ký gói tập GYM trước khi có thể thuê Personal Trainer!</p>
+        <a href="{{ url_for('member.view_packages') }}" class="btn btn-success">
+            <i class="bi bi-cart-plus"></i> Xem các gói GYM
+        </a>
+    </div>
+    {% endif %}
+
+    {% if has_active_package %}
+    <div class="alert alert-info">
+        <strong>Lưu ý:</strong> Bạn đã có gói tập đang hoạt động. Khi mua gói PT:
+        <ul class="mb-0 mt-2">
+            <li>Gói hiện tại sẽ tiếp tục hoạt động đến hết hạn</li>
+            <li>Gói PT mới sẽ tự động kích hoạt khi gói hiện tại hết hạn</li>
+            <li>Bạn không bị mất thời gian đã mua</li>
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if packages %}
+    <div class="row">
+        {% for package in packages %}
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm border-warning">
+                <div class="card-header bg-warning text-white text-center">
+                    <strong>GÓI PERSONAL TRAINER</strong>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-center mb-3">{{ package.name }}</h5>
+                    <div class="text-center mb-3">
+                        <h2 class="text-warning">{{ "{:,.0f}".format(package.price) }} VNĐ</h2>
+                        <p class="text-muted">{{ package.duration_months }} tháng</p>
+                    </div>
+
+                    {% if package.description %}
+                    <p class="card-text text-muted small">{{ package.description }}</p>
+                    {% endif %}
+
+                    <div class="mt-auto">
+                        {% if has_gym_package %}
+                        <form method="POST" action="{{ url_for('member.create_checkout_session', package_id=package.id) }}">
+                            <button type="submit" class="btn btn-warning w-100 text-white">
+                                <i class="bi bi-credit-card"></i> Thanh toán
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary w-100" disabled>
+                            <i class="bi bi-lock"></i> Cần gói GYM trước
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        <h4>Chưa có gói PT nào</h4>
+        <p>Hiện tại chưa có gói Personal Trainer nào. Vui lòng quay lại sau!</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4) !important;
+}
+.border-warning {
+    border-width: 2px !important;
+}
+</style>
+{% endblock %}
+

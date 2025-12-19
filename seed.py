@@ -100,13 +100,21 @@ def seed_data(app):
 
         # --- BƯỚC 4: GÓI TẬP (GYM PACKAGE) ---
         print("\n[Bước 4] Seed Gym Packages...")
-        package_1m = GymPackage(name="Gói 1 tháng", duration_months=1, price=500000.00, description="Gói tập cơ bản 1 tháng")
-        package_3m = GymPackage(name="Gói 3 tháng", duration_months=3, price=1200000.00, description="Gói tập 3 tháng, tiết kiệm hơn")
-        package_6m = GymPackage(name="Gói 6 tháng", duration_months=6, price=2000000.00, description="Gói tập 6 tháng, ưu đãi tốt")
-        package_12m = GymPackage(name="Gói 12 tháng", duration_months=12, price=3500000.00, description="Gói tập 1 năm, giá tốt nhất")
-        db.session.add_all([package_1m, package_3m, package_6m, package_12m])
+        # Gym packages
+        package_1m = GymPackage(name="Gói 1 tháng", duration_months=1, price=500000.00, description="Gói tập cơ bản 1 tháng", package_type="GYM")
+        package_3m = GymPackage(name="Gói 3 tháng", duration_months=3, price=1200000.00, description="Gói tập 3 tháng, tiết kiệm hơn", package_type="GYM")
+        package_6m = GymPackage(name="Gói 6 tháng", duration_months=6, price=2000000.00, description="Gói tập 6 tháng, ưu đãi tốt", package_type="GYM")
+        package_12m = GymPackage(name="Gói 12 tháng", duration_months=12, price=3500000.00, description="Gói tập 1 năm, giá tốt nhất", package_type="GYM")
+
+        # PT (Personal Trainer) packages
+        pt_1m = GymPackage(name="Gói PT 1 tháng", duration_months=1, price=3000000.00, description="12 buổi tập 1-1 với PT chuyên nghiệp", package_type="PT")
+        pt_3m = GymPackage(name="Gói PT 3 tháng", duration_months=3, price=8000000.00, description="36 buổi tập 1-1 với PT, tiết kiệm 10%", package_type="PT")
+        pt_6m = GymPackage(name="Gói PT 6 tháng", duration_months=6, price=15000000.00, description="72 buổi tập 1-1 với PT, tiết kiệm 15%", package_type="PT")
+        pt_12m = GymPackage(name="Gói PT 12 tháng", duration_months=12, price=28000000.00, description="144 buổi tập 1-1 với PT, tiết kiệm 20%", package_type="PT")
+
+        db.session.add_all([package_1m, package_3m, package_6m, package_12m, pt_1m, pt_3m, pt_6m, pt_12m])
         db.session.commit()
-        print("   -> Gym Packages OK.")
+        print("   -> Gym Packages & PT Packages OK.")
 
         # --- BƯỚC 5: ĐĂNG KÝ GÓI (MEMBERSHIP) ---
         print("\n[Bước 5] Seed Memberships...")
