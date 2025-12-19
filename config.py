@@ -17,6 +17,11 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'shgq xjaz owfd hvew')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'GYM Beta <quockhanh.qkdd@gmail.com>')
 
+    # Stripe Configuration
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51RWUJiP1KldmuNx2X4je5Ai0q2OdP6XhLfJ8aJGXk1jnnfU4rZ5YwfEiDglOEERQvc8JLPom87tMhrRLxYmNAxgT00RcHBeBah')
+    STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_51RWUJiP1KldmuNx2Zap4Zi3By47GvLUjekLWIRtKLxOS4t4dphNDbdhjds9BtImqb3kRD6Rq69uJpfunhoH78Djj00DMFoj67G')
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_501e533ba57fca1f90abd542eb410b8ba721a6db00be369cc95b8aeb983bc814')
+
     def init_cloudinary():
         cloudinary.config(
             cloud_name="delrpa4vp",

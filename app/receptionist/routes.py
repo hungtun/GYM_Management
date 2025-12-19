@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.decorators import role_required
-from app.models import GymPackage, Member, User, Membership
+from app.models import GymPackage, Member, User, Membership, Payment
 from app.extensions import db
 from app.services.member_services import (
     register_member_with_package,
@@ -105,7 +105,8 @@ def member_detail(member_id):
 
     membership_html = render_template(
         'receptionist/partials/membership_info.html',
-        membership=member_data['membership']
+        membership=member_data['membership'],
+        all_memberships=member_data.get('all_memberships', [])
     )
 
     return jsonify({
@@ -121,12 +122,23 @@ def add_package(member_id):
     """Thêm gói tập cho hội viên"""
     try:
         package_id = request.form.get('package_id')
+        payment_method = request.form.get('payment_method', 'Thanh toán tại quầy')
+
         if not package_id:
             flash('Vui lòng chọn gói tập', 'error')
             return redirect(url_for('receptionist_bp.dashboard'))
 
-        membership = add_package_to_member(member_id, int(package_id))
-        flash(f'Đăng ký gói thành công!', 'success')
+        membership, payment = add_package_to_member(
+            member_id,
+            int(package_id),
+            payment_method=payment_method
+        )
+
+        # Display appropriate message based on membership status
+        if membership.active:
+            flash(f'Đăng ký gói thành công! Gói đã được kích hoạt.', 'success')
+        else:
+            flash(f'Đăng ký gói thành công! Gói sẽ tự động kích hoạt khi gói hiện tại hết hạn.', 'success')
 
         # Gửi email thông báo
         member = Member.query.get(member_id)

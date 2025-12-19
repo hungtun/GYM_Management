@@ -39,9 +39,9 @@ def seed_data(app):
     """
     with app.app_context():
         print("--- BẮT ĐẦU SEED DỮ LIỆU ---")
-        
+
         # Mật khẩu hash mẫu (ví dụ: "Password123")
-        hashed_password = hashlib.md5("1".encode('utf-8')).hexdigest()        
+        hashed_password = hashlib.md5("1".encode('utf-8')).hexdigest()
         # --- (Tùy chọn) XÓA DỮ LIỆU CŨ ---
         print("\n[Bước 0] Xóa dữ liệu cũ (Chỉ trong môi trường DEV/TEST)...")
         try:
@@ -97,14 +97,14 @@ def seed_data(app):
         db.session.add_all([trainer_1, trainer_2, receptionist, member_1, member_2])
         db.session.commit()
         print("   -> Profiles OK.")
-        
+
         # --- BƯỚC 4: GÓI TẬP (GYM PACKAGE) ---
         print("\n[Bước 4] Seed Gym Packages...")
-        package_1m = GymPackage(name="1 Month Basic", duration_months=1, price=500000.00, description="Access to basic facilities.")
-        package_3m = GymPackage(name="3 Month Standard", duration_months=3, price=1200000.00, description="Includes one free PT session.")
-        package_6m = GymPackage(name="6 Month Standard", duration_months=6, price=1200000.00, description="Includes one free PT session.")
-        package_12m = GymPackage(name="12 Month Premium", duration_months=12, price=4800000.00, description="Full access, unlimited classes.")
-        db.session.add_all([package_1m, package_3m,package_6m, package_12m])
+        package_1m = GymPackage(name="Gói 1 tháng", duration_months=1, price=500000.00, description="Gói tập cơ bản 1 tháng")
+        package_3m = GymPackage(name="Gói 3 tháng", duration_months=3, price=1200000.00, description="Gói tập 3 tháng, tiết kiệm hơn")
+        package_6m = GymPackage(name="Gói 6 tháng", duration_months=6, price=2000000.00, description="Gói tập 6 tháng, ưu đãi tốt")
+        package_12m = GymPackage(name="Gói 12 tháng", duration_months=12, price=3500000.00, description="Gói tập 1 năm, giá tốt nhất")
+        db.session.add_all([package_1m, package_3m, package_6m, package_12m])
         db.session.commit()
         print("   -> Gym Packages OK.")
 
@@ -153,7 +153,7 @@ def seed_data(app):
         db.session.add_all([detail_1, detail_2, detail_3])
         db.session.commit()
         print("   -> Training Plans & Details OK.")
-        
+
         print("\n--- ✅ SEED DỮ LIỆU HOÀN TẤT! ---")
         print("\nThông tin đăng nhập mẫu:")
         print("  - Admin: admin/Password123")
@@ -163,5 +163,5 @@ def seed_data(app):
 if __name__ == '__main__':
     # THAY ĐỔI: Thay 'app_name' bằng module/instance Flask của bạn
     # Ví dụ: nếu hàm factory của bạn là create_app(), hãy dùng như dưới đây.
-    app = create_app() 
+    app = create_app()
     seed_data(app)
