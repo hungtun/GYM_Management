@@ -161,10 +161,12 @@
                                 <select name="package_id" class="form-control" required>
                                     <option value="">Chọn gói tập</option>
                                     {% for package in packages %}
+                                    {% if package.package_type == 'GYM' %}
                                     <option value="{{ package.id }}" data-price="{{ package.price }}">
                                         {{ package.name }} - {{ package.duration_months }} tháng -
                                         {{ "{:,.0f}".format(package.price) }} VNĐ
                                     </option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
@@ -211,15 +213,18 @@
                         <h6>Chọn gói tập</h6>
                         <form method="POST" id="addPackageForm">
                             <input type="hidden" name="member_id" id="modalMemberId">
-                            <select name="package_id" class="form-control mb-2" required>
+                            <select name="package_id" class="form-control mb-2" id="packageSelectDropdown" required>
                                 <option value="">Chọn gói tập</option>
                                 {% for package in packages %}
-                                <option value="{{ package.id }}">
+                                <option value="{{ package.id }}" data-package-type="{{ package.package_type }}">
                                     {{ package.name }} - {{ package.duration_months }} tháng -
                                     {{ "{:,.0f}".format(package.price) }} VNĐ
                                 </option>
                                 {% endfor %}
                             </select>
+                            <div id="ptWarning" class="alert alert-warning mt-2" style="display:none;">
+                                <small><strong>Lưu ý:</strong> Hội viên cần có gói GYM đang hoạt động để đăng ký gói PT!</small>
+                            </div>
                             <button type="submit" class="btn btn-success">Xác nhận</button>
                             <button type="button" class="btn btn-secondary" onclick="hidePackageSelection()">Hủy</button>
                         </form>
@@ -243,6 +248,32 @@ function viewMemberDetail(memberId) {
             // Reset package selection form
             document.getElementById('packageSelection').style.display = 'none';
             document.getElementById('addPackageForm').reset();
+
+            // Filter PT packages if member doesn't have valid GYM package
+            const hasValidGym = data.has_valid_gym;
+            const dropdown = document.getElementById('packageSelectDropdown');
+            const warning = document.getElementById('ptWarning');
+
+            // Reset all options first
+            Array.from(dropdown.options).forEach(option => {
+                if (option.value) {  // Skip the default "Chọn gói tập" option
+                    option.disabled = false;
+                    option.style.display = '';
+                }
+            });
+
+            // If no valid GYM, disable/hide PT packages
+            if (!hasValidGym) {
+                warning.style.display = 'block';
+                Array.from(dropdown.options).forEach(option => {
+                    if (option.dataset.packageType === 'PT') {
+                        option.disabled = true;
+                        option.style.display = 'none';
+                    }
+                });
+            } else {
+                warning.style.display = 'none';
+            }
 
             const modal = new bootstrap.Modal(document.getElementById('memberDetailModal'));
             modal.show();

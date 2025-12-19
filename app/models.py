@@ -32,6 +32,7 @@ class User(UserMixin, BaseModel):
     gender = db.Column(db.String(10))
     birth_day = db.Column(db.Date)
     phone = db.Column(db.String(20))
+    avatar_url = db.Column(db.String(255))
     join_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
@@ -79,6 +80,7 @@ class GymPackage(BaseModel):
     duration_months = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
+    package_type = db.Column(db.String(20), default='GYM')  # 'GYM' or 'PT' (Personal Trainer)
 
     memberships = db.relationship("Membership", back_populates="package")
 

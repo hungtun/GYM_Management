@@ -71,6 +71,9 @@
                             href="{{ url_for('member.dashboard', _external=False) if current_user.member_profile else url_for('main.home') }}">Bảng
                             điều khiển</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('member.view_pt_packages') }}">Chọn gói PT</a>
+                    </li>
                     {% endif %}
                     {% else %}
                     <li class="nav-item">

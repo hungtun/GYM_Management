@@ -93,9 +93,31 @@ def register_member():
 @role_required('receptionist', 'admin')
 def member_detail(member_id):
     """Lấy chi tiết hội viên (AJAX)"""
+    from datetime import datetime, timezone
+
     member_data = get_member_detail(member_id)
     if not member_data:
         return jsonify({'error': 'Không tìm thấy hội viên'}), 404
+
+    # Check if member has active GYM package (for PT validation)
+    now = datetime.now(timezone.utc)
+    has_valid_gym = False
+
+    gym_memberships = Membership.query.join(
+        GymPackage, Membership.package_id == GymPackage.id
+    ).filter(
+        Membership.member_id == member_id,
+        GymPackage.package_type == 'GYM'
+    ).all()
+
+    for membership in gym_memberships:
+        end_date = membership.end_date
+        if end_date and end_date.tzinfo is None:
+            end_date = end_date.replace(tzinfo=timezone.utc)
+
+        if membership.active or (end_date and end_date > now):
+            has_valid_gym = True
+            break
 
     # Render HTML cho modal từ template partials
     info_html = render_template(
@@ -112,7 +134,8 @@ def member_detail(member_id):
     return jsonify({
         'info_html': info_html,
         'membership_html': membership_html,
-        'member_id': member_id
+        'member_id': member_id,
+        'has_valid_gym': has_valid_gym
     })
 
 @receptionist.route('/member/<int:member_id>/add-package', methods=['POST'])

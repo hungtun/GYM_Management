@@ -14,7 +14,7 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.user_login'
-    login_manager.login_message = 'Vui lòng đăng nhập để tiếp tục'
+    login_manager.login_message = None  # Disable automatic login message
     login_manager.login_message_category = 'info'
     Config.init_cloudinary()
 
