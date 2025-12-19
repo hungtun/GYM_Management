@@ -123,18 +123,23 @@ def get_member_detail(member_id):
         return None
 
     # Lấy membership đang hoạt động
-    membership = Membership.query.filter_by(
+    active_membership = Membership.query.filter_by(
         member_id=member_id,
         active=True
     ).first()
 
+    # Lấy tất cả các gói tập (sắp xếp theo ngày bắt đầu mới nhất)
+    all_memberships = Membership.query.filter_by(
+        member_id=member_id
+    ).order_by(Membership.start_date.desc()).all()
+
     return {
         'member': member,
-        'membership': membership
+        'membership': active_membership,
+        'all_memberships': all_memberships
     }
 
-def add_package_to_member(member_id, package_id):
-
+def add_package_to_member(member_id, package_id, payment_method="Thanh toán tại quầy"):
     member = Member.query.get(member_id)
     if not member:
         raise ValueError("Hội viên không tồn tại")
@@ -143,24 +148,73 @@ def add_package_to_member(member_id, package_id):
     if not package:
         raise ValueError("Gói tập không tồn tại")
 
-    # Vô hiệu hóa các membership cũ
-    Membership.query.filter_by(member_id=member_id, active=True).update({'active': False})
+    now = datetime.now(timezone.utc)
 
-    # Tạo membership mới
-    start_date = datetime.now(timezone.utc)
-    end_date = start_date + timedelta(days=package.duration_months * 30)
+    # Find the latest membership (by end_date) regardless of active status
+    # This ensures we stack packages correctly even if there are pending ones
+    latest_membership = Membership.query.filter_by(
+        member_id=member_id
+    ).order_by(Membership.end_date.desc()).first()
 
+    # Check for currently active membership
+    active_membership = Membership.query.filter_by(
+        member_id=member_id,
+        active=True
+    ).first()
+
+    # Calculate start and end dates
+    new_membership_active = False
+
+    if latest_membership:
+        # Make sure end_date is timezone-aware
+        latest_end_date = latest_membership.end_date
+        if latest_end_date.tzinfo is None:
+            latest_end_date = latest_end_date.replace(tzinfo=timezone.utc)
+
+        if latest_end_date > now:
+            # There's a valid package (active or pending): stack new package after it
+            start_date = latest_end_date
+            end_date = start_date + timedelta(days=package.duration_months * 30)
+            new_membership_active = False  # Will be pending until latest package expires
+        else:
+            # Latest package has expired: activate new package immediately
+            # Deactivate old active membership if exists
+            if active_membership:
+                active_membership.active = False
+            start_date = now
+            end_date = start_date + timedelta(days=package.duration_months * 30)
+            new_membership_active = True
+    else:
+        # No existing package: activate immediately
+        start_date = now
+        end_date = start_date + timedelta(days=package.duration_months * 30)
+        new_membership_active = True
+
+    # Create new membership
     membership = Membership(
         member_id=member_id,
         package_id=package_id,
         start_date=start_date,
         end_date=end_date,
-        active=True
+        active=new_membership_active
     )
     db.session.add(membership)
+    db.session.flush()
+
+    # Create payment record (PAID immediately for counter payment)
+    payment = Payment(
+        member_id=member_id,
+        amount=package.price,
+        payment_date=now,
+        note=f"{payment_method} - {package.name}",
+        status="PAID",
+        paid_at=now
+    )
+    db.session.add(payment)
+
     db.session.commit()
 
-    return membership
+    return membership, payment
 
 def process_payment_callback(txn_ref, status, paid_at=None, raw_response=None):
     """

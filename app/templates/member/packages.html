@@ -19,7 +19,12 @@
 
     {% if has_active_package %}
     <div class="alert alert-info">
-        <strong>Lưu ý:</strong> Bạn đã có gói tập đang hoạt động. Nếu mua gói mới, gói cũ sẽ bị vô hiệu hóa.
+        <strong>Lưu ý:</strong> Bạn đã có gói tập đang hoạt động. Khi mua gói mới:
+        <ul class="mb-0 mt-2">
+            <li>Gói hiện tại sẽ tiếp tục hoạt động đến hết hạn</li>
+            <li>Gói mới sẽ tự động kích hoạt khi gói hiện tại hết hạn</li>
+            <li>Bạn không bị mất thời gian đã mua</li>
+        </ul>
     </div>
     {% endif %}
 
@@ -39,18 +44,16 @@
                     {% endif %}
 
                     <div class="mt-auto">
-                        <form method="POST" action="{{ url_for('member.select_package', package_id=package.id) }}">
-                            <button type="submit" class="btn btn-primary w-100">Chọn gói này</button>
+                        <form method="POST" action="{{ url_for('member.create_checkout_session', package_id=package.id) }}">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-credit-card"></i> Thanh toán
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
-    </div>
-
-    <div class="text-center mt-4">
-        <a href="{{ url_for('member.dashboard') }}" class="btn btn-secondary">Quay lại Dashboard</a>
     </div>
 </div>
 
@@ -64,4 +67,3 @@
 }
 </style>
 {% endblock %}
-

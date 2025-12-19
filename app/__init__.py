@@ -22,6 +22,10 @@ def create_app():
     from app.services.email_service import init_email
     init_email(app)
 
+    # Initialize Stripe
+    from app.services.stripe_service import init_stripe
+    init_stripe(app)
+
     from .routes import main
     from .auth.routes import auth
     from .member.routes import member

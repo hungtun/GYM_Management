@@ -56,7 +56,7 @@
                             {% endif %}
                         {% endif %}
 
-                        <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary mt-2">Gia hạn / Đổi gói</a>
+                        <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary mt-2">Gia hạn</a>
                     {% else %}
                         <div class="alert alert-warning">
                             <p class="mb-2">Bạn chưa có gói tập nào.</p>
@@ -67,6 +67,68 @@
             </div>
         </div>
     </div>
+
+    <!-- Lịch sử các gói tập đã mua -->
+    {% if all_memberships %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Lịch sử các gói tập</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Gói tập</th>
+                                    <th>Thời hạn</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày hết hạn</th>
+                                    <th>Còn lại</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for membership in all_memberships %}
+                                <tr>
+                                    <td><strong>{{ membership.package.name }}</strong></td>
+                                    <td>{{ membership.package.duration_months }} tháng</td>
+                                    <td>{{ membership.start_date.strftime('%d/%m/%Y') if membership.start_date else 'N/A' }}</td>
+                                    <td>{{ membership.end_date.strftime('%d/%m/%Y') if membership.end_date else 'N/A' }}</td>
+                                    <td>
+                                        {% if membership.end_date %}
+                                            {% set days_left = (membership.end_date.date() - now().date()).days %}
+                                            {% if days_left > 0 %}
+                                                <span class="text-success">{{ days_left }} ngày</span>
+                                            {% else %}
+                                                <span class="text-muted">Đã hết hạn</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if membership.active %}
+                                            <span class="badge bg-success">Đang hoạt động</span>
+                                        {% else %}
+                                            {% if membership.start_date.date() > now().date() %}
+                                                <span class="badge bg-warning">Chờ kích hoạt</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Đã kết thúc</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Lịch sử thanh toán (nếu có) -->
     {% if member %}
