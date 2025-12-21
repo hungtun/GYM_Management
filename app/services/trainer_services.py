@@ -1,6 +1,5 @@
 from app.models import Trainer, Member, TrainingPlan, TrainingDetail, SystemSetting, PTSubscription
 from app.extensions import db
-from sqlalchemy.orm import joinedload
 
 
 def get_trainer_by_user_id(user_id):
@@ -94,14 +93,7 @@ def get_all_exercises():
     return Exercise.query.all()
 
 def get_training_plan_with_details(plan_id):
-    return (
-        TrainingPlan.query
-        .options(
-            joinedload(TrainingPlan.details).joinedload(TrainingDetail.exercise)
-        )
-        .filter_by(id=plan_id)
-        .first()
-    )
+    return TrainingPlan.query.filter_by(id=plan_id).first()
 
 def get_max_days_per_week(default=6):
     setting = SystemSetting.query.filter_by(key='MAX_DAYS_PER_WEEK').first()

@@ -145,42 +145,21 @@ def create_plan():
     trainer_profile = get_trainer_by_user_id(current_user.id)
     
     if request.method == 'GET':
-        from sqlalchemy.orm import joinedload
-        
-        # Lấy TẤT CẢ PTSubscriptions của trainer này (không phân biệt status)
-        # Eager load relationships để tránh N+1 query
-        all_pt_subs = PTSubscription.query.options(
-            joinedload(PTSubscription.member).joinedload(Member.user),
-            joinedload(PTSubscription.pt_package),
-            joinedload(PTSubscription.training_plans)
-        ).filter(
+        all_pt_subs = PTSubscription.query.filter(
             PTSubscription.trainer_id == trainer_profile.id
         ).all()
         
-        # Lọc ra các subscription với status='active' và chưa có plan
         subscriptions_without_plan = []
         for sub in all_pt_subs:
-            # Chỉ lấy subscription active và chưa có plan
-            if sub.status == 'active' and not sub.training_plans:
+            existing_plan = TrainingPlan.query.filter_by(pt_subscription_id=sub.id).first()
+            if sub.status == 'active' and not existing_plan:
                 subscriptions_without_plan.append(sub)
         
-        # Debug: Log để kiểm tra
-        print(f"[DEBUG create_plan] Trainer ID: {trainer_profile.id}")
-        print(f"[DEBUG create_plan] Total subscriptions for trainer: {len(all_pt_subs)}")
-        print(f"[DEBUG create_plan] Active subscriptions without plan: {len(subscriptions_without_plan)}")
-        for sub in all_pt_subs:
-            print(f"[DEBUG create_plan] Subscription {sub.id}: status={sub.status}, trainer_id={sub.trainer_id}, has_plan={len(sub.training_plans) > 0}")
-        
-        # Nếu không có subscription nào, hiển thị thông báo
         if not subscriptions_without_plan:
             if all_pt_subs:
-                # Có subscriptions nhưng không có subscription nào active và chưa có plan
                 active_subs = [s for s in all_pt_subs if s.status == 'active']
-                subs_with_plan = [s for s in all_pt_subs if s.training_plans]
-                if active_subs and subs_with_plan:
+                if active_subs:
                     flash('Tất cả các subscription active của bạn đã có kế hoạch tập luyện rồi.', 'info')
-                elif active_subs:
-                    flash('Có subscription active nhưng không thể tạo plan. Vui lòng liên hệ admin.', 'warning')
                 else:
                     flash('Bạn chưa có subscription PT nào ở trạng thái active. Vui lòng nhận yêu cầu PT từ trang "Yêu cầu PT chờ nhận".', 'warning')
             else:
