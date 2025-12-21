@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 
 from app.decorators import role_required
 from app.extensions import db
-from app.models import TrainingDetail, Member, TrainingPlan
+from app.models import TrainingDetail, Member, TrainingPlan, PTSubscription
 from app.services.trainer_services import *
 
 trainer = Blueprint('trainer', __name__, url_prefix='/trainer')
@@ -20,7 +20,14 @@ def dashboard():
     
     stats = get_trainer_stats(trainer.id)
     
-    return render_template('trainer/dashboard.html',user = current_user ,trainer=trainer, stats=stats)
+    # Lấy số lượng pending PT requests
+    pending_requests_count = len(get_pending_pt_subscriptions())
+    
+    return render_template('trainer/dashboard.html',
+                         user=current_user,
+                         trainer=trainer,
+                         stats=stats,
+                         pending_requests_count=pending_requests_count)
 
 @trainer.route('/members')
 @login_required
@@ -34,15 +41,27 @@ def members():
     page = request.args.get('page', 1, type=int)
     page_size = current_app.config.get('PAGE_SIZE', 6)
 
+    # Lấy members từ PTSubscription thay vì TrainingPlan
     base_query = db.session.query(Member).join(
-        TrainingPlan, TrainingPlan.member_id == Member.id
+        PTSubscription, PTSubscription.member_id == Member.id
     ).filter(
-        TrainingPlan.trainer_id == trainer_profile.id
+        PTSubscription.trainer_id == trainer_profile.id,
+        PTSubscription.status.in_(['active', 'pending'])
     ).distinct()
 
     total_members = base_query.count()
     members = base_query.order_by(Member.register_date.desc()).offset((page - 1) * page_size).limit(page_size).all()
     total_pages = max(ceil(total_members / page_size), 1)
+
+    # Lấy PT subscriptions cho mỗi member để hiển thị trong UI
+    member_subscriptions_map = {}
+    for member in members:
+        subscriptions = PTSubscription.query.filter_by(
+            member_id=member.id,
+            trainer_id=trainer_profile.id,
+            status='active'
+        ).all()
+        member_subscriptions_map[member.id] = subscriptions
 
     return render_template(
         'trainer/members.html',
@@ -51,7 +70,8 @@ def members():
         page=page,
         total_pages=total_pages,
         total_members=total_members,
-        page_size=page_size
+        page_size=page_size,
+        member_subscriptions_map=member_subscriptions_map
     )
 
 @trainer.route('/plans')
@@ -125,19 +145,67 @@ def create_plan():
     trainer_profile = get_trainer_by_user_id(current_user.id)
     
     if request.method == 'GET':
-        members = get_trainer_members(trainer_profile.id)
+        from sqlalchemy.orm import joinedload
+        
+        # Lấy TẤT CẢ PTSubscriptions của trainer này (không phân biệt status)
+        # Eager load relationships để tránh N+1 query
+        all_pt_subs = PTSubscription.query.options(
+            joinedload(PTSubscription.member).joinedload(Member.user),
+            joinedload(PTSubscription.pt_package),
+            joinedload(PTSubscription.training_plans)
+        ).filter(
+            PTSubscription.trainer_id == trainer_profile.id
+        ).all()
+        
+        # Lọc ra các subscription với status='active' và chưa có plan
+        subscriptions_without_plan = []
+        for sub in all_pt_subs:
+            # Chỉ lấy subscription active và chưa có plan
+            if sub.status == 'active' and not sub.training_plans:
+                subscriptions_without_plan.append(sub)
+        
+        # Debug: Log để kiểm tra
+        print(f"[DEBUG create_plan] Trainer ID: {trainer_profile.id}")
+        print(f"[DEBUG create_plan] Total subscriptions for trainer: {len(all_pt_subs)}")
+        print(f"[DEBUG create_plan] Active subscriptions without plan: {len(subscriptions_without_plan)}")
+        for sub in all_pt_subs:
+            print(f"[DEBUG create_plan] Subscription {sub.id}: status={sub.status}, trainer_id={sub.trainer_id}, has_plan={len(sub.training_plans) > 0}")
+        
+        # Nếu không có subscription nào, hiển thị thông báo
+        if not subscriptions_without_plan:
+            if all_pt_subs:
+                # Có subscriptions nhưng không có subscription nào active và chưa có plan
+                active_subs = [s for s in all_pt_subs if s.status == 'active']
+                subs_with_plan = [s for s in all_pt_subs if s.training_plans]
+                if active_subs and subs_with_plan:
+                    flash('Tất cả các subscription active của bạn đã có kế hoạch tập luyện rồi.', 'info')
+                elif active_subs:
+                    flash('Có subscription active nhưng không thể tạo plan. Vui lòng liên hệ admin.', 'warning')
+                else:
+                    flash('Bạn chưa có subscription PT nào ở trạng thái active. Vui lòng nhận yêu cầu PT từ trang "Yêu cầu PT chờ nhận".', 'warning')
+            else:
+                flash('Bạn chưa có subscription PT nào. Vui lòng nhận yêu cầu PT từ trang "Yêu cầu PT chờ nhận".', 'warning')
+        
         exercises = get_all_exercises()
-        selected_member_id = request.args.get('member_id')
+        selected_subscription_id = request.args.get('subscription_id')
+        
         return render_template('trainer/create_plan.html',
-                               members = members,
-                               exercises = exercises,
-                               trainer = trainer_profile,
-                               selected_member_id = selected_member_id)
+                               pt_subscriptions=subscriptions_without_plan,
+                               exercises=exercises,
+                               trainer=trainer_profile,
+                               selected_subscription_id=selected_subscription_id)
     if request.method == 'POST':
-        member_id = request.form.get('member_id')
-        if not member_id:
-            flash('Vui lòng chọn hội viên','error')
-            return redirect(url_for('trainer.create_plan'))  
+        pt_subscription_id = request.form.get('pt_subscription_id')
+        if not pt_subscription_id:
+            flash('Vui lòng chọn subscription PT','error')
+            return redirect(url_for('trainer.create_plan'))
+        
+        # Kiểm tra subscription thuộc về trainer này
+        pt_subscription = PTSubscription.query.get(pt_subscription_id)
+        if not pt_subscription or pt_subscription.trainer_id != trainer_profile.id:
+            flash('Subscription không hợp lệ', 'error')
+            return redirect(url_for('trainer.create_plan'))
+        
         exercise_ids = request.form.getlist('exercise_id[]')
         sets_list = request.form.getlist('sets[]')
         reps_list = request.form.getlist('reps[]')
@@ -148,7 +216,7 @@ def create_plan():
         ]
         if not valid_rows:
            flash('Vui lòng thêm ít nhất một bài tập đầy đủ thông tin', 'error')
-           return redirect(url_for('trainer.create_plan', member_id=member_id))
+           return redirect(url_for('trainer.create_plan', subscription_id=pt_subscription_id))
         MAX_DAYS_PER_WEEK = get_max_days_per_week()
 
         all_days = set()
@@ -160,9 +228,9 @@ def create_plan():
 
         if len(all_days) > MAX_DAYS_PER_WEEK:
             flash(f'Tổng số ngày trong tuần không được vượt quá {MAX_DAYS_PER_WEEK} ngày.', 'error')
-            return redirect(url_for('trainer.create_plan', member_id=member_id))
+            return redirect(url_for('trainer.create_plan', subscription_id=pt_subscription_id))
 
-        plan = create_training_plan(trainer_profile.id, member_id)
+        plan = create_training_plan(pt_subscription_id)
         
         for idx in valid_rows:
            detail = TrainingDetail(
@@ -284,3 +352,56 @@ def delete_plan(plan_id):
     
     flash('Kế hoạch tập luyện đã được xóa', 'success')
     return redirect(url_for('trainer.plans'))
+
+@trainer.route('/pt-requests')
+@login_required
+@role_required('trainer')
+def pt_requests():
+    """Hiển thị danh sách các yêu cầu PT đang pending (chưa có trainer nhận)"""
+    trainer_profile = get_trainer_by_user_id(current_user.id)
+    if not trainer_profile:
+        flash('Không tìm thấy hồ sơ huấn luyện viên', 'error')
+        return redirect(url_for('trainer.dashboard'))
+    
+    page = request.args.get('page', 1, type=int)
+    page_size = current_app.config.get('PAGE_SIZE', 6)
+    
+    # Lấy tất cả PT subscriptions đang pending (chưa có trainer)
+    base_query = PTSubscription.query.filter(
+        PTSubscription.trainer_id.is_(None),
+        PTSubscription.status == 'pending'
+    ).order_by(PTSubscription.created_at.desc())
+    
+    total_requests = base_query.count()
+    requests = base_query.offset((page - 1) * page_size).limit(page_size).all()
+    total_pages = max(ceil(total_requests / page_size), 1)
+    
+    return render_template(
+        'trainer/pt_requests.html',
+        requests=requests,
+        trainer=trainer_profile,
+        page=page,
+        total_pages=total_pages,
+        total_requests=total_requests,
+        page_size=page_size
+    )
+
+@trainer.route('/pt-requests/<int:subscription_id>/accept', methods=['POST'])
+@login_required
+@role_required('trainer')
+def accept_pt_request(subscription_id):
+    """Trainer accept một PT subscription request"""
+    trainer_profile = get_trainer_by_user_id(current_user.id)
+    if not trainer_profile:
+        flash('Không tìm thấy hồ sơ huấn luyện viên', 'error')
+        return redirect(url_for('trainer.dashboard'))
+    
+    try:
+        accept_pt_subscription(subscription_id, trainer_profile.id)
+        flash('Đã nhận yêu cầu PT thành công! Bạn có thể tạo kế hoạch tập luyện cho hội viên này.', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+    except Exception as e:
+        flash(f'Lỗi khi nhận yêu cầu: {str(e)}', 'error')
+    
+    return redirect(url_for('trainer.pt_requests'))

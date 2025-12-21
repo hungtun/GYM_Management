@@ -11,6 +11,7 @@
         margin-bottom: 1rem;
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         justify-content: space-between;
         gap: 1rem;
     }
@@ -105,16 +106,19 @@
         <div>
             <h5 class="mb-1">{{ plan.member.user.first_name or '' }} {{ plan.member.user.last_name or '' }}</h5>
             <div class="plan-meta">
+                {% if plan.pt_subscription %}
+                Gói PT: {{ plan.pt_subscription.pt_package.name }} &middot;
+                {% endif %}
                 Ngày tạo: {{ plan.created_at.strftime('%d/%m/%Y') }} &middot;
                 {{ plan.details|length }} bài tập
             </div>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
             <a href="{{ url_for('trainer.plan_detail', plan_id=plan.id) }}"
                 class="btn btn-sm btn-outline-primary">Xem</a>
             <a href="{{ url_for('trainer.edit_plan', plan_id=plan.id) }}" class="btn btn-sm btn-outline-warning">Sửa</a>
             <form method="POST" action="{{ url_for('trainer.delete_plan', plan_id=plan.id) }}"
-                onsubmit="return confirm('Bạn có chắc chắn muốn xóa kế hoạch này?');">
+                onsubmit="return confirm('Bạn có chắc chắn muốn xóa kế hoạch này?');" class="d-inline">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
             </form>
         </div>

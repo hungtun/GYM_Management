@@ -7,11 +7,12 @@ from wtforms.validators import DataRequired, Length
 from app.extensions import db
 from app.models import (
     User, Role, Member, Trainer, Receptionist,
-    GymPackage, Membership, Payment, Exercise,
+    GymPackage, PTPackage, Membership, PTSubscription, Payment, Exercise,
     TrainingPlan, TrainingDetail, SystemSetting
 )
 from app.decorators import role_required
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from sqlalchemy import func, extract, and_
 import hashlib
 
 
@@ -205,6 +206,82 @@ class AdminLogoutView(BaseView):
         return redirect(url_for('auth.user_login'))
 
 
+def get_statistics_data():
+    """
+    Hàm helper để tính toán dữ liệu thống kê cho 12 tháng gần nhất
+    """
+    current_date = datetime.now(timezone.utc)
+    months_data = []
+    
+    for i in range(11, -1, -1):  # 12 tháng gần nhất
+        target_date = current_date.replace(day=1)
+        for _ in range(i):
+            # Lùi về tháng trước
+            if target_date.month == 1:
+                target_date = target_date.replace(year=target_date.year - 1, month=12)
+            else:
+                target_date = target_date.replace(month=target_date.month - 1)
+        
+        year = target_date.year
+        month = target_date.month
+        
+        # 1. Số hội viên đăng ký trong tháng
+        members_count = db.session.query(func.count(Member.id)).filter(
+            extract('year', Member.register_date) == year,
+            extract('month', Member.register_date) == month
+        ).scalar() or 0
+        
+        # 2. Doanh thu trong tháng (từ Payment)
+        revenue = db.session.query(func.sum(Payment.amount)).filter(
+            extract('year', Payment.payment_date) == year,
+            extract('month', Payment.payment_date) == month,
+            Payment.status == 'PAID'
+        ).scalar() or 0
+        
+        # 3. Số hội viên đang hoạt động cuối tháng (membership còn hạn)
+        try:
+            # Tính ngày cuối tháng
+            if month == 12:
+                next_month_first = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                next_month_first = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+            end_of_month = next_month_first - timedelta(days=1)
+        except:
+            end_of_month = datetime(year, month, 28, tzinfo=timezone.utc)
+        
+        active_memberships_count = db.session.query(func.count(Membership.id)).filter(
+            Membership.active == True,
+            Membership.start_date <= end_of_month,
+            db.or_(
+                Membership.end_date.is_(None),
+                Membership.end_date >= end_of_month
+            )
+        ).scalar() or 0
+        
+        months_data.append({
+            'year': year,
+            'month': month,
+            'label': f"{month}/{year}",
+            'members_count': members_count,
+            'revenue': float(revenue),
+            'active_memberships': active_memberships_count
+        })
+    
+    # Chuẩn bị dữ liệu cho Chart.js
+    labels = [data['label'] for data in months_data]
+    members_data = [data['members_count'] for data in months_data]
+    revenue_data = [data['revenue'] for data in months_data]
+    active_memberships_data = [data['active_memberships'] for data in months_data]
+    
+    return {
+        'labels': labels,
+        'members_data': members_data,
+        'revenue_data': revenue_data,
+        'active_memberships_data': active_memberships_data,
+        'months_data': months_data
+    }
+
+
 class MyAdminIndexView(AdminIndexView):
     def __init__(self, *args, **kwargs):
         super(MyAdminIndexView, self).__init__(*args, **kwargs)
@@ -213,7 +290,6 @@ class MyAdminIndexView(AdminIndexView):
     @role_required('admin')
     @expose('/')
     def index(self):
-        # Statistics
         total_members = Member.query.count()
         total_trainers = Trainer.query.count()
         total_packages = GymPackage.query.count()
@@ -226,7 +302,11 @@ class MyAdminIndexView(AdminIndexView):
             'active_memberships': active_memberships
         }
 
-        return self.render('admin/index.html', stats=stats)
+        statistics_data = get_statistics_data()
+
+        return self.render('admin/index.html', 
+                         stats=stats,
+                         **statistics_data)
 
 class RoleView(AdminModelView):
     column_list = ['id', 'name']
@@ -250,8 +330,10 @@ def init_admin(app):
     admin.add_view(TrainerView(Trainer, db.session, name='Huấn luyện viên', endpoint='admin_trainer', category='Quản lý người dùng'))
     admin.add_view(ReceptionistView(Receptionist, db.session, name='Lễ tân', endpoint='admin_receptionist', category='Quản lý người dùng'))
 
-    admin.add_view(GymPackageView(GymPackage, db.session, name='Gói tập', endpoint='admin_package', category='Quản lý dịch vụ'))
+    admin.add_view(GymPackageView(GymPackage, db.session, name='Gói tập GYM', endpoint='admin_package', category='Quản lý dịch vụ'))
+    admin.add_view(ModelView(PTPackage, db.session, name='Gói PT', endpoint='admin_pt_package', category='Quản lý dịch vụ'))
     admin.add_view(MembershipView(Membership, db.session, name='Thẻ hội viên', endpoint='admin_membership', category='Quản lý dịch vụ'))
+    admin.add_view(ModelView(PTSubscription, db.session, name='Đăng ký PT', endpoint='admin_pt_subscription', category='Quản lý dịch vụ'))
     admin.add_view(PaymentView(Payment, db.session, name='Thanh toán', endpoint='admin_payment', category='Quản lý dịch vụ'))
 
     admin.add_view(ExerciseView(Exercise, db.session, name='Bài tập', endpoint='admin_exercise', category='Quản lý tập luyện'))

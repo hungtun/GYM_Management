@@ -79,15 +79,25 @@
                         <span>📧 {{ member.user.email }}</span>
                         <span>📞 {{ member.user.phone or 'Chưa có' }}</span>
                     </div>
-                    <div class="d-flex gap-2 mt-auto">
-                        <a href="{{ url_for('trainer.create_plan', member_id=member.id) }}"
-                            class="btn btn-sm btn-primary flex-grow-1">
-                            ➕ Tạo kế hoạch
+                    <div class="d-flex gap-2 mt-auto flex-column">
+                        {% set member_subscriptions = member_subscriptions_map.get(member.id, []) %}
+                        {% if member_subscriptions %}
+                        {% for sub in member_subscriptions %}
+                        {% if not sub.training_plans %}
+                        <a href="{{ url_for('trainer.create_plan', subscription_id=sub.id) }}"
+                            class="btn btn-sm btn-primary">
+                            ➕ Tạo kế hoạch ({{ sub.pt_package.name }})
                         </a>
-                        <a href="{{ url_for('trainer.plans', member_id=member.id) }}"
-                            class="btn btn-sm btn-outline-secondary">
-                            📋 Xem kế hoạch
+                        {% else %}
+                        <a href="{{ url_for('trainer.plan_detail', plan_id=sub.training_plans[0].id) }}"
+                            class="btn btn-sm btn-outline-primary">
+                            📋 Xem kế hoạch ({{ sub.pt_package.name }})
                         </a>
+                        {% endif %}
+                        {% endfor %}
+                        {% else %}
+                        <span class="text-muted small">Chưa có gói PT active</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -125,7 +135,7 @@
 {% else %}
 <div class="alert alert-info text-center">
     <p class="mb-0">Bạn chưa có hội viên nào được gán.</p>
-    <p class="mb-0">Hội viên sẽ xuất hiện ở đây sau khi bạn tạo kế hoạch tập luyện cho họ.</p>
+    <p class="mb-0">Hội viên sẽ xuất hiện ở đây sau khi họ đăng ký gói PT và bạn accept subscription.</p>
 </div>
 {% endif %}
 </div>

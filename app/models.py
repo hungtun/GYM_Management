@@ -52,6 +52,7 @@ class Member(BaseModel):
     user = db.relationship("User", back_populates="member_profile")
     memberships = db.relationship("Membership", back_populates="member", cascade="all, delete-orphan")
     payments = db.relationship("Payment", back_populates="member", cascade="all, delete-orphan")
+    pt_subscriptions = db.relationship("PTSubscription", back_populates="member")  
 
 
 # ===== HUẤN LUYỆN VIÊN =====
@@ -63,6 +64,7 @@ class Trainer(BaseModel):
 
     user = db.relationship("User", back_populates="trainer_profile")
     training_plans = db.relationship("TrainingPlan", back_populates="trainer")
+    pt_subscriptions = db.relationship("PTSubscription", back_populates="trainer")  
 
 
 # ===== LỄ TÂN =====
@@ -80,10 +82,17 @@ class GymPackage(BaseModel):
     duration_months = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
-    package_type = db.Column(db.String(20), default='GYM')  # 'GYM' or 'PT' (Personal Trainer)
 
     memberships = db.relationship("Membership", back_populates="package")
 
+# ===== GÓI PT (PERSONAL TRAINER PACKAGE) =====
+class PTPackage(BaseModel):
+    name = db.Column(db.String(50), nullable=False)
+    duration_months = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(255))
+
+    subscriptions = db.relationship("PTSubscription", back_populates="pt_package")
 
 # ===== ĐĂNG KÝ GÓI (THẺ HỘI VIÊN) =====
 class Membership(BaseModel):
@@ -96,6 +105,26 @@ class Membership(BaseModel):
     member = db.relationship("Member", back_populates="memberships")
     package = db.relationship("GymPackage", back_populates="memberships")
 
+# ===== ĐĂNG KÝ GÓI PT (PERSONAL TRAINER SUBSCRIPTION) =====
+class PTSubscription(BaseModel):
+    member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
+    pt_package_id = db.Column(db.Integer, db.ForeignKey("pt_package.id"), nullable=False)
+    trainer_id = db.Column(db.Integer, db.ForeignKey("trainer.id"), nullable=True) 
+    
+    start_date = db.Column(db.DateTime, nullable=True)  # Sẽ được set khi trainer accept
+    end_date = db.Column(db.DateTime, nullable=True)  # Sẽ được tính khi trainer accept
+    active = db.Column(db.Boolean, default=True)
+    
+    status = db.Column(db.String(20), default="pending")  # pending, active, completed, cancelled
+    notes = db.Column(db.Text)  # Ghi chú từ member hoặc trainer
+    
+    member = db.relationship("Member", back_populates="pt_subscriptions")
+    pt_package = db.relationship("PTPackage", back_populates="subscriptions")
+    trainer = db.relationship("Trainer", back_populates="pt_subscriptions")
+    training_plans = db.relationship("TrainingPlan", back_populates="pt_subscription", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"PTSubscription(member={self.member_id}, package={self.pt_package_id}, status={self.status})"
 
 # ===== THANH TOÁN =====
 class Payment(BaseModel):
@@ -121,10 +150,12 @@ class Exercise(BaseModel):
 
 # ===== KẾ HOẠCH TẬP LUYỆN =====
 class TrainingPlan(BaseModel):
+    pt_subscription_id = db.Column(db.Integer, db.ForeignKey("pt_subscription.id"), nullable=False)
     trainer_id = db.Column(db.Integer, db.ForeignKey("trainer.id"), nullable=False)
     member_id = db.Column(db.Integer, db.ForeignKey("member.id"), nullable=False)
-    date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Relationships - Thêm pt_subscription
+    pt_subscription = db.relationship("PTSubscription", back_populates="training_plans")
     trainer = db.relationship("Trainer", back_populates="training_plans")
     member = db.relationship("Member")
     details = db.relationship("TrainingDetail", back_populates="plan", cascade="all, delete-orphan")
@@ -142,9 +173,7 @@ class TrainingDetail(BaseModel):
     exercise = db.relationship("Exercise")
 
 class SystemSetting(BaseModel):
-    # key: tên cấu hình, ví dụ: MAX_DAYS_PER_WEEK
     key = db.Column(db.String(100), unique=True, nullable=False)
-    # value: lưu dạng chuỗi, sau đọc ra convert sang int/bool...
     value = db.Column(db.String(255), nullable=False)
 
     def __repr__(self):

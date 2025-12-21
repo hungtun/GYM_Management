@@ -7,14 +7,15 @@
     <h2 class="mb-4">Chào mừng, {{ user.first_name }} {{ user.last_name }}!</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     <div class="row">
@@ -28,7 +29,8 @@
                     <p><strong>Tên đăng nhập:</strong> {{ user.username }}</p>
                     <p><strong>Email:</strong> {{ user.email }}</p>
                     <p><strong>Số điện thoại:</strong> {{ user.phone or 'Chưa cập nhật' }}</p>
-                    <p><strong>Ngày sinh:</strong> {{ user.birth_day.strftime('%d/%m/%Y') if user.birth_day else 'Chưa cập nhật' }}</p>
+                    <p><strong>Ngày sinh:</strong> {{ user.birth_day.strftime('%d/%m/%Y') if user.birth_day else 'Chưa
+                        cập nhật' }}</p>
                     <p><strong>Giới tính:</strong> {{ user.gender or 'Chưa cập nhật' }}</p>
                 </div>
             </div>
@@ -42,39 +44,86 @@
                 </div>
                 <div class="card-body">
                     {% if active_membership %}
-                        <h6 class="text-success">{{ active_membership.package.name }}</h6>
-                        <p><strong>Thời hạn:</strong> {{ active_membership.package.duration_months }} tháng</p>
-                        <p><strong>Ngày bắt đầu:</strong> {{ active_membership.start_date.strftime('%d/%m/%Y') }}</p>
-                        <p><strong>Ngày hết hạn:</strong> {{ active_membership.end_date.strftime('%d/%m/%Y') if active_membership.end_date else 'N/A' }}</p>
+                    <h6 class="text-success">{{ active_membership.package.name }}</h6>
+                    <p><strong>Thời hạn:</strong> {{ active_membership.package.duration_months }} tháng</p>
+                    <p><strong>Ngày bắt đầu:</strong> {{ active_membership.start_date.strftime('%d/%m/%Y') }}</p>
+                    <p><strong>Ngày hết hạn:</strong> {{ active_membership.end_date.strftime('%d/%m/%Y') if
+                        active_membership.end_date else 'N/A' }}</p>
 
-                        {% if active_membership.end_date %}
-                            {% set days_left = (active_membership.end_date.date() - now().date()).days %}
-                            {% if days_left > 0 %}
-                                <p class="text-success"><strong>Còn lại:</strong> {{ days_left }} ngày</p>
-                            {% else %}
-                                <p class="text-danger"><strong>Trạng thái:</strong> Đã hết hạn</p>
-                            {% endif %}
-                        {% endif %}
-
-                        <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary mt-2">Gia hạn</a>
+                    {% if active_membership.end_date %}
+                    {% set days_left = (active_membership.end_date.date() - now().date()).days %}
+                    {% if days_left > 0 %}
+                    <p class="text-success"><strong>Còn lại:</strong> {{ days_left }} ngày</p>
                     {% else %}
-                        <div class="alert alert-warning">
-                            <p class="mb-2">Bạn chưa có gói tập nào.</p>
-                            <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary">Chọn gói tập ngay</a>
-                        </div>
+                    <p class="text-danger"><strong>Trạng thái:</strong> Đã hết hạn</p>
+                    {% endif %}
+                    {% endif %}
+
+                    <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary mt-2">Gia hạn</a>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <p class="mb-2">Bạn chưa có gói tập nào.</p>
+                        <a href="{{ url_for('member.view_packages') }}" class="btn btn-primary">Chọn gói tập ngay</a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Gói PT hiện tại -->
+    {% if active_pt_subscription %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Gói PT hiện tại</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-warning">{{ active_pt_subscription.pt_package.name }}</h6>
+                    <p><strong>Thời hạn:</strong> {{ active_pt_subscription.pt_package.duration_months }} tháng</p>
+                    <p><strong>Ngày bắt đầu:</strong> {{ active_pt_subscription.start_date.strftime('%d/%m/%Y') if
+                        active_pt_subscription.start_date else 'N/A' }}</p>
+                    <p><strong>Ngày hết hạn:</strong> {{ active_pt_subscription.end_date.strftime('%d/%m/%Y') if
+                        active_pt_subscription.end_date else 'N/A' }}</p>
+                    {% if active_pt_subscription.trainer %}
+                    <p><strong>Huấn luyện viên:</strong> {{ active_pt_subscription.trainer.user.first_name }} {{
+                        active_pt_subscription.trainer.user.last_name }}</p>
+                    {% else %}
+                    <p><strong>Huấn luyện viên:</strong> <span class="text-warning">Đang chờ trainer nhận</span></p>
+                    {% endif %}
+                    <p><strong>Trạng thái:</strong>
+                        {% if active_pt_subscription.status == 'active' %}
+                        <span class="badge bg-success">Đang hoạt động</span>
+                        {% elif active_pt_subscription.status == 'pending' %}
+                        <span class="badge bg-warning">Chờ trainer nhận</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ active_pt_subscription.status }}</span>
+                        {% endif %}
+                    </p>
+                    {% if active_pt_subscription.end_date %}
+                    {% set days_left = (active_pt_subscription.end_date.date() - now().date()).days %}
+                    {% if days_left > 0 %}
+                    <p class="text-success"><strong>Còn lại:</strong> {{ days_left }} ngày</p>
+                    {% else %}
+                    <p class="text-danger"><strong>Trạng thái:</strong> Đã hết hạn</p>
+                    {% endif %}
+                    {% endif %}
+                    <a href="{{ url_for('member.view_pt_packages') }}" class="btn btn-warning mt-2 text-white">Gia hạn
+                        gói PT</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Lịch sử các gói tập đã mua -->
     {% if all_memberships %}
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">Lịch sử các gói tập</h5>
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Lịch sử các gói tập GYM</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -94,29 +143,106 @@
                                 <tr>
                                     <td><strong>{{ membership.package.name }}</strong></td>
                                     <td>{{ membership.package.duration_months }} tháng</td>
-                                    <td>{{ membership.start_date.strftime('%d/%m/%Y') if membership.start_date else 'N/A' }}</td>
-                                    <td>{{ membership.end_date.strftime('%d/%m/%Y') if membership.end_date else 'N/A' }}</td>
+                                    <td>{{ membership.start_date.strftime('%d/%m/%Y') if membership.start_date else
+                                        'N/A' }}</td>
+                                    <td>{{ membership.end_date.strftime('%d/%m/%Y') if membership.end_date else 'N/A' }}
+                                    </td>
                                     <td>
                                         {% if membership.end_date %}
-                                            {% set days_left = (membership.end_date.date() - now().date()).days %}
-                                            {% if days_left > 0 %}
-                                                <span class="text-success">{{ days_left }} ngày</span>
-                                            {% else %}
-                                                <span class="text-muted">Đã hết hạn</span>
-                                            {% endif %}
+                                        {% set days_left = (membership.end_date.date() - now().date()).days %}
+                                        {% if days_left > 0 %}
+                                        <span class="text-success">{{ days_left }} ngày</span>
                                         {% else %}
-                                            <span class="text-muted">N/A</span>
+                                        <span class="text-muted">Đã hết hạn</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if membership.active %}
-                                            <span class="badge bg-success">Đang hoạt động</span>
+                                        <span class="badge bg-success">Đang hoạt động</span>
                                         {% else %}
-                                            {% if membership.start_date.date() > now().date() %}
-                                                <span class="badge bg-warning">Chờ kích hoạt</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Đã kết thúc</span>
-                                            {% endif %}
+                                        {% if membership.start_date.date() > now().date() %}
+                                        <span class="badge bg-warning">Chờ kích hoạt</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Đã kết thúc</span>
+                                        {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lịch sử các gói PT đã đăng ký -->
+    {% if all_pt_subscriptions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Lịch sử các gói PT</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Gói PT</th>
+                                    <th>Thời hạn</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày hết hạn</th>
+                                    <th>Huấn luyện viên</th>
+                                    <th>Còn lại</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in all_pt_subscriptions %}
+                                <tr>
+                                    <td><strong>{{ subscription.pt_package.name }}</strong></td>
+                                    <td>{{ subscription.pt_package.duration_months }} tháng</td>
+                                    <td>{{ subscription.start_date.strftime('%d/%m/%Y') if subscription.start_date else
+                                        'N/A' }}</td>
+                                    <td>{{ subscription.end_date.strftime('%d/%m/%Y') if subscription.end_date else
+                                        'N/A' }}</td>
+                                    <td>
+                                        {% if subscription.trainer %}
+                                        {{ subscription.trainer.user.first_name }} {{
+                                        subscription.trainer.user.last_name }}
+                                        {% else %}
+                                        <span class="text-muted">Chưa có</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if subscription.end_date %}
+                                        {% set days_left = (subscription.end_date.date() - now().date()).days %}
+                                        {% if days_left > 0 %}
+                                        <span class="text-success">{{ days_left }} ngày</span>
+                                        {% else %}
+                                        <span class="text-muted">Đã hết hạn</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if subscription.status == 'active' %}
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                        {% elif subscription.status == 'pending' %}
+                                        <span class="badge bg-warning">Chờ trainer nhận</span>
+                                        {% elif subscription.status == 'completed' %}
+                                        <span class="badge bg-info">Hoàn thành</span>
+                                        {% elif subscription.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ subscription.status }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -140,38 +266,39 @@
                 </div>
                 <div class="card-body">
                     {% if member.payments %}
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Ngày</th>
-                                        <th>Số tiền</th>
-                                        <th>Trạng thái</th>
-                                        <th>Ghi chú</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for payment in member.payments %}
-                                    <tr>
-                                        <td>{{ payment.payment_date.strftime('%d/%m/%Y %H:%M') if payment.payment_date else 'Chưa thanh toán' }}</td>
-                                        <td>{{ "{:,.0f}".format(payment.amount) }} VNĐ</td>
-                                        <td>
-                                            {% if payment.status == 'PAID' %}
-                                                <span class="badge bg-success">Đã thanh toán</span>
-                                            {% elif payment.status == 'PENDING' %}
-                                                <span class="badge bg-warning">Chờ thanh toán</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">Thất bại</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ payment.note or 'N/A' }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in member.payments %}
+                                <tr>
+                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y %H:%M') if payment.payment_date else
+                                        'Chưa thanh toán' }}</td>
+                                    <td>{{ "{:,.0f}".format(payment.amount) }} VNĐ</td>
+                                    <td>
+                                        {% if payment.status == 'PAID' %}
+                                        <span class="badge bg-success">Đã thanh toán</span>
+                                        {% elif payment.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Chờ thanh toán</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Thất bại</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.note or 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <p class="text-muted">Chưa có giao dịch nào.</p>
+                    <p class="text-muted">Chưa có giao dịch nào.</p>
                     {% endif %}
                 </div>
             </div>
@@ -181,4 +308,3 @@
 </div>
 
 {% endblock %}
-

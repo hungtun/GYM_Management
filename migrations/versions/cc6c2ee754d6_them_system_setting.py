@@ -1,7 +1,7 @@
 """them system setting
 
 Revision ID: cc6c2ee754d6
-Revises: 3654940eda12
+Revises: 41af4cec7ee0
 Create Date: 2025-12-16 15:31:34.334356
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'cc6c2ee754d6'
-down_revision = '3654940eda12'
+down_revision = '41af4cec7ee0'
 branch_labels = None
 depends_on = None
 
