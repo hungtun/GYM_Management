@@ -202,6 +202,8 @@
                     <hr>
                     <h6>Thẻ hội viên</h6>
                     <div id="currentMembership"></div>
+                    <hr>
+                    <div id="paymentHistory"></div>
 
                     <div class="mt-3">
                         <button class="btn btn-primary" onclick="showPackageSelection()">
@@ -244,6 +246,7 @@
             .then(data => {
                 document.getElementById('memberInfo').innerHTML = data.info_html;
                 document.getElementById('currentMembership').innerHTML = data.membership_html;
+                document.getElementById('paymentHistory').innerHTML = data.payments_html || '';
                 document.getElementById('modalMemberId').value = memberId;
                 document.getElementById('addPackageForm').action = `/receptionist/member/${memberId}/add-package`;
 

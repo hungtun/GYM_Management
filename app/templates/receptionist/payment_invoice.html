@@ -1,0 +1,152 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Hóa đơn thanh toán #{{ payment.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        padding: 2rem;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .invoice-header {
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .invoice-footer {
+        border-top: 2px solid #667eea;
+        padding-top: 1rem;
+        margin-top: 2rem;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .invoice-table {
+        width: 100%;
+        margin: 1.5rem 0;
+    }
+
+    .invoice-table th {
+        background-color: #f3f4f6;
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    .invoice-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .total-row {
+        font-weight: bold;
+        font-size: 1.1rem;
+        background-color: #f9fafb;
+    }
+
+    .print-btn {
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2 class="text-primary mb-0">GYM Beta</h2>
+                    <p class="text-muted mb-0">Hóa đơn thanh toán</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h4 class="mb-0">Hóa đơn #{{ payment.id }}</h4>
+                    <p class="text-muted mb-0">
+                        Ngày: {{ payment.payment_date.strftime('%d/%m/%Y %H:%M') if payment.payment_date else 'N/A' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Thông tin khách hàng</h5>
+                <p class="mb-1"><strong>Họ tên:</strong> {{ member.user.first_name or '' }} {{ member.user.last_name or
+                    '' }}</p>
+                <p class="mb-1"><strong>Email:</strong> {{ member.user.email }}</p>
+                <p class="mb-1"><strong>SĐT:</strong> {{ member.user.phone or 'N/A' }}</p>
+                <p class="mb-0"><strong>Mã hội viên:</strong> #{{ member.id }}</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Thông tin thanh toán</h5>
+                <p class="mb-1"><strong>Mã giao dịch:</strong> {{ payment.txn_ref or 'N/A' }}</p>
+                <p class="mb-1"><strong>Trạng thái:</strong>
+                    {% if payment.status == 'PAID' %}
+                    <span class="badge bg-success">Đã thanh toán</span>
+                    {% else %}
+                    <span class="badge bg-warning">{{ payment.status }}</span>
+                    {% endif %}
+                </p>
+                {% if payment.paid_at %}
+                <p class="mb-1"><strong>Thời gian thanh toán:</strong> {{ payment.paid_at.strftime('%d/%m/%Y %H:%M') }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Invoice Items -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Mô tả</th>
+                    <th class="text-end">Số tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        {% if membership %}
+                        Thanh toán gói tập: {{ membership.package.name }}<br>
+                        <small class="text-muted">Thời hạn: {{ membership.package.duration_months }} tháng</small>
+                        {% elif payment.note %}
+                        {{ payment.note }}
+                        {% else %}
+                        Thanh toán dịch vụ
+                        {% endif %}
+                    </td>
+                    <td class="text-end">{{ "{:,.0f}".format(payment.amount) }} VNĐ</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="text-end"><strong>Tổng cộng:</strong></td>
+                    <td class="text-end"><strong>{{ "{:,.0f}".format(payment.amount) }} VNĐ</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Notes -->
+        {% if payment.note %}
+        <div class="alert alert-info mt-3">
+            <strong>Ghi chú:</strong> {{ payment.note }}
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <p class="mb-1">Cảm ơn quý khách đã sử dụng dịch vụ của GYM Beta!</p>
+            <p class="mb-0"><small>Hotline: 1900 1234 | Email: gymbeta@gmail.com</small></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="text-center print-btn">
+            <button onclick="window.print()" class="btn btn-primary">🖨️ In hóa đơn</button>
+            <a href="{{ url_for('receptionist_bp.dashboard') }}" class="btn btn-secondary">Quay lại</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

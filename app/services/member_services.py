@@ -96,7 +96,7 @@ def register_member_with_package(
 
     return user, member, membership, payment
 
-def get_member_list(search=None, status=None):
+def get_member_list(search=None, status=None, return_query=False):
 
     from sqlalchemy import or_
     query = Member.query.join(User)
@@ -114,7 +114,11 @@ def get_member_list(search=None, status=None):
     if status:
         query = query.filter(Member.status == status)
 
-    return query.order_by(Member.register_date.desc()).all()
+    query = query.order_by(Member.register_date.desc())
+    
+    if return_query:
+        return query
+    return query.all()
 
 def get_member_detail(member_id):
 
