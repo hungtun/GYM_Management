@@ -149,6 +149,19 @@ def create_plan():
         if not valid_rows:
            flash('Vui lòng thêm ít nhất một bài tập đầy đủ thông tin', 'error')
            return redirect(url_for('trainer.create_plan', member_id=member_id))
+        MAX_DAYS_PER_WEEK = get_max_days_per_week()
+
+        all_days = set()
+
+        for idx in valid_rows:
+            raw_days = days_list[idx]
+            split_days = [day.strip() for day in raw_days.split(',') if day.strip()]
+            all_days.update(split_days)
+
+        if len(all_days) > MAX_DAYS_PER_WEEK:
+            flash(f'Tổng số ngày trong tuần không được vượt quá {MAX_DAYS_PER_WEEK} ngày.', 'error')
+            return redirect(url_for('trainer.create_plan', member_id=member_id))
+
         plan = create_training_plan(trainer_profile.id, member_id)
         
         for idx in valid_rows:
@@ -219,7 +232,22 @@ def edit_plan(plan_id):
                                    plan=plan,
                                    exercises=exercises,
                                    trainer_profile=trainer_profile)
-                                   
+        MAX_DAYS_PER_WEEK = get_max_days_per_week()
+
+        all_days = set()
+        for idx in valid_rows:
+            raw_days = days_list[idx]
+            split_days = [d.strip() for d in raw_days.split(',') if d.strip()]
+            all_days.update(split_days)
+
+        if len(all_days) > MAX_DAYS_PER_WEEK:
+            flash(f'Số ngày tập tối đa mỗi tuần là {MAX_DAYS_PER_WEEK}, bạn đang chọn {len(all_days)} ngày.', 'error')
+            exercises = get_all_exercises()
+            return render_template('trainer/edit_plan.html',
+                                plan=plan,
+                                exercises=exercises,
+                                trainer=trainer_profile)
+
         delete_training_plan_details(plan_id)
 
         for idx in valid_rows:

@@ -8,7 +8,7 @@ from app.extensions import db
 from app.models import (
     User, Role, Member, Trainer, Receptionist,
     GymPackage, Membership, Payment, Exercise,
-    TrainingPlan, TrainingDetail
+    TrainingPlan, TrainingDetail, SystemSetting
 )
 from app.decorators import role_required
 from datetime import datetime
@@ -106,6 +106,7 @@ class MemberView(AdminModelView):
     }
 
 
+
 class TrainerView(AdminModelView):
     """
     View quản lý huấn luyện viên
@@ -187,6 +188,15 @@ class TrainingPlanView(AdminModelView):
         'created_at': 'Ngày tạo'
     }
 
+class SystemSettingView(AdminModelView):
+    column_list = ['id', 'key', 'value', 'created_at', 'updated_at']
+    column_searchable_list = ['key']
+    column_labels = {
+        'setting_name': 'Tên cấu hình',
+        'setting_value': 'Giá trị',
+        'created_at': 'Ngày tạo',
+        'updated_at': 'Ngày cập nhật'
+    }
 
 class AdminLogoutView(BaseView):
     @expose('/')
@@ -247,7 +257,7 @@ def init_admin(app):
     admin.add_view(ExerciseView(Exercise, db.session, name='Bài tập', endpoint='admin_exercise', category='Quản lý tập luyện'))
     admin.add_view(TrainingPlanView(TrainingPlan, db.session, name='Kế hoạch tập', endpoint='admin_training_plan', category='Quản lý tập luyện'))
     admin.add_view(ModelView(TrainingDetail, db.session, name='Chi tiết kế hoạch', endpoint='admin_training_detail', category='Quản lý tập luyện'))
-
+    admin.add_view(SystemSettingView(SystemSetting, db.session,name='Cấu hình hệ thống', endpoint='admin_system_settings', category='Tiện ích'))
     admin.add_view(AdminLogoutView(name='Đăng xuất', endpoint='admin_logout', category='Tiện ích'))
 
     return admin

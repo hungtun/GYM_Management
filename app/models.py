@@ -140,3 +140,12 @@ class TrainingDetail(BaseModel):
 
     plan = db.relationship("TrainingPlan", back_populates="details")
     exercise = db.relationship("Exercise")
+
+class SystemSetting(BaseModel):
+    # key: tên cấu hình, ví dụ: MAX_DAYS_PER_WEEK
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    # value: lưu dạng chuỗi, sau đọc ra convert sang int/bool...
+    value = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"{self.key} = {self.value}"

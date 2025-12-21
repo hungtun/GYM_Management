@@ -1,4 +1,4 @@
-from app.models import Trainer, Member, TrainingPlan, TrainingDetail
+from app.models import Trainer, Member, TrainingPlan, TrainingDetail, SystemSetting
 from app.extensions import db
 from sqlalchemy.orm import joinedload
 
@@ -65,3 +65,6 @@ def get_training_plan_with_details(plan_id):
         .first()
     )
 
+def get_max_days_per_week():
+    setting = SystemSetting.query.filter_by(key='MAX_DAYS_PER_WEEK').first()
+    return int(setting.value)
