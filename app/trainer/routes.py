@@ -1,6 +1,4 @@
-from math import ceil
-
-from flask import Blueprint, flash, render_template, request, redirect, url_for, current_app
+from flask import Blueprint, flash, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 
 from app.decorators import role_required
@@ -38,9 +36,6 @@ def members():
         flash('Không tìm thấy hồ sơ huấn luyện viên', 'error')
         return redirect(url_for('trainer.dashboard'))
 
-    page = request.args.get('page', 1, type=int)
-    page_size = current_app.config.get('PAGE_SIZE', 6)
-
     # Lấy members từ PTSubscription thay vì TrainingPlan
     base_query = db.session.query(Member).join(
         PTSubscription, PTSubscription.member_id == Member.id
@@ -49,9 +44,7 @@ def members():
         PTSubscription.status.in_(['active', 'pending'])
     ).distinct()
 
-    total_members = base_query.count()
-    members = base_query.order_by(Member.register_date.desc()).offset((page - 1) * page_size).limit(page_size).all()
-    total_pages = max(ceil(total_members / page_size), 1)
+    members = base_query.order_by(Member.register_date.desc()).all()
 
     # Lấy PT subscriptions cho mỗi member để hiển thị trong UI
     member_subscriptions_map = {}
@@ -67,10 +60,6 @@ def members():
         'trainer/members.html',
         members=members,
         trainer=trainer_profile,
-        page=page,
-        total_pages=total_pages,
-        total_members=total_members,
-        page_size=page_size,
         member_subscriptions_map=member_subscriptions_map
     )
 
@@ -83,17 +72,13 @@ def plans():
         flash('Không tìm thấy hồ sơ huấn luyện viên', 'error')
         return redirect(url_for('trainer.dashboard'))
 
-    page = request.args.get('page', 1, type=int)
     member_filter = request.args.get('member_id', type=int)
-    page_size = current_app.config.get('PAGE_SIZE', 6)
 
     base_query = TrainingPlan.query.filter_by(trainer_id=trainer_profile.id).order_by(TrainingPlan.created_at.desc())
     if member_filter:
         base_query = base_query.filter(TrainingPlan.member_id == member_filter)
 
-    total_plans = base_query.count()
-    plans = base_query.offset((page - 1) * page_size).limit(page_size).all()
-    total_pages = max(ceil(total_plans / page_size), 1)
+    plans = base_query.all()
 
     managed_members = get_trainer_members(trainer_profile.id)
 
@@ -101,10 +86,6 @@ def plans():
         'trainer/training_plans.html',
         trainer=trainer_profile,
         plans=plans,
-        page=page,
-        total_pages=total_pages,
-        total_plans=total_plans,
-        page_size=page_size,
         managed_members=managed_members,
         member_filter=member_filter
     )
@@ -342,27 +323,16 @@ def pt_requests():
         flash('Không tìm thấy hồ sơ huấn luyện viên', 'error')
         return redirect(url_for('trainer.dashboard'))
     
-    page = request.args.get('page', 1, type=int)
-    page_size = current_app.config.get('PAGE_SIZE', 6)
-    
     # Lấy tất cả PT subscriptions đang pending (chưa có trainer)
-    base_query = PTSubscription.query.filter(
+    requests = PTSubscription.query.filter(
         PTSubscription.trainer_id.is_(None),
         PTSubscription.status == 'pending'
-    ).order_by(PTSubscription.created_at.desc())
-    
-    total_requests = base_query.count()
-    requests = base_query.offset((page - 1) * page_size).limit(page_size).all()
-    total_pages = max(ceil(total_requests / page_size), 1)
+    ).order_by(PTSubscription.created_at.desc()).all()
     
     return render_template(
         'trainer/pt_requests.html',
         requests=requests,
-        trainer=trainer_profile,
-        page=page,
-        total_pages=total_pages,
-        total_requests=total_requests,
-        page_size=page_size
+        trainer=trainer_profile
     )
 
 @trainer.route('/pt-requests/<int:subscription_id>/accept', methods=['POST'])

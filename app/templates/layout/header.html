@@ -53,7 +53,12 @@
                         <a class="nav-link" href="{{ url_for('trainer.create_plan') }}">Tạo kế hoạch</a>
                     </li>
                     {% elif current_user.receptionist_profile %}
-                    <!-- Receptionist has no navigation menu items -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('receptionist_bp.dashboard') }}">Dashboard</a>
+                    </li>
                     {% elif current_user.role and current_user.role.name and current_user.role.name.lower() == 'admin'
                     %}
                     <li class="nav-item">
@@ -117,6 +122,9 @@
                             {% if current_user.trainer_profile %}
                             <li><a class="dropdown-item" href="{{ url_for('trainer.dashboard') }}">Trang huấn luyện
                                     viên</a></li>
+                            {% elif current_user.receptionist_profile %}
+                            <li><a class="dropdown-item" href="{{ url_for('receptionist_bp.dashboard') }}">Trang lễ
+                                    tân</a></li>
                             {% elif current_user.role and current_user.role.name and current_user.role.name.lower() ==
                             'admin' %}
                             <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Trang quản trị</a></li>

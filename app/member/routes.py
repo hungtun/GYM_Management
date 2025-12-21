@@ -31,7 +31,7 @@ def dashboard():
             active=True
         ).first()
 
-        # Lấy tất cả các gói tập đã mua (sắp xếp theo ngày bắt đầu mới nhất)
+        # Lấy tất cả các gói tập đã mua
         all_memberships = Membership.query.filter_by(
             member_id=member.id
         ).order_by(Membership.start_date.desc()).all()
@@ -43,7 +43,7 @@ def dashboard():
             status='active'
         ).first()
         
-        # Lấy tất cả các gói PT đã đăng ký (sắp xếp theo ngày bắt đầu mới nhất)
+        # Lấy tất cả các gói PT đã đăng ký
         all_pt_subscriptions = PTSubscription.query.filter_by(
             member_id=member.id
         ).order_by(PTSubscription.start_date.desc()).all()
@@ -58,27 +58,15 @@ def dashboard():
 
 
 def _check_and_activate_pending_memberships(member_id):
+    """Check and activate pending GYM memberships when current one expires"""
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
 
-    # Process GYM packages
-    _activate_pending_for_package_type(member_id, 'GYM', now)
-
-    # Process PT packages
-    _activate_pending_for_package_type(member_id, 'PT', now)
-
-
-def _activate_pending_for_package_type(member_id, package_type, now):
-    """Activate pending membership for a specific package type"""
-
-    # Get current active membership of this type
-    active_membership = Membership.query.join(
-        GymPackage, Membership.package_id == GymPackage.id
-    ).filter(
+    # Get current active membership (all memberships are GYM packages now)
+    active_membership = Membership.query.filter(
         Membership.member_id == member_id,
-        Membership.active == True,
-        GymPackage.package_type == package_type
+        Membership.active == True
     ).first()
 
     # If active membership expired, deactivate it
@@ -91,13 +79,10 @@ def _activate_pending_for_package_type(member_id, package_type, now):
             # Deactivate expired membership
             active_membership.active = False
 
-            # Find next pending membership of the same type (earliest start date)
-            next_membership = Membership.query.join(
-                GymPackage, Membership.package_id == GymPackage.id
-            ).filter(
+            # Find next pending membership (earliest start date)
+            next_membership = Membership.query.filter(
                 Membership.member_id == member_id,
                 Membership.active == False,
-                GymPackage.package_type == package_type,
                 Membership.start_date <= now
             ).order_by(Membership.start_date.asc()).first()
 
@@ -109,7 +94,7 @@ def _activate_pending_for_package_type(member_id, package_type, now):
 @login_required
 def view_packages():
     """Trang xem và chọn các gói tập"""
-    packages = GymPackage.query.all()
+    packages = GymPackage.query.order_by(GymPackage.price.asc()).all()
     member = Member.query.filter_by(user_id=current_user.id).first()
 
     # Kiểm tra xem member đã có gói chưa
@@ -130,7 +115,7 @@ def view_packages():
 @login_required
 def view_pt_packages():
     """Trang xem và chọn các gói PT (Personal Trainer)"""
-    packages = PTPackage.query.all()
+    packages = PTPackage.query.order_by(PTPackage.price.asc()).all()
     member = Member.query.filter_by(user_id=current_user.id).first()
 
     # Check if member has ACTIVE GYM package (required to purchase PT)
