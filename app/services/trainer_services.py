@@ -14,11 +14,14 @@ def get_trainer_stats(trainer_id):
 
     recent_subscriptions = PTSubscription.query.filter_by(trainer_id=trainer_id).order_by(PTSubscription.created_at.desc()).limit(5).all()
 
+    recent_plans = TrainingPlan.query.filter_by(trainer_id=trainer_id).order_by(TrainingPlan.created_at.desc()).limit(5).all()
+
     return {
         'total_members': total_members,
         'total_subscriptions': total_subscriptions,
         'total_plans': total_plans,
-        'recent_subscriptions': recent_subscriptions
+        'recent_subscriptions': recent_subscriptions,
+        'recent_plans': recent_plans
     }
 
 def get_trainer_members(trainer_id):
