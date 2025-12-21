@@ -24,6 +24,7 @@ def dashboard():
     # Lấy PT subscription đang active
     active_pt_subscription = None
     all_pt_subscriptions = []
+    payments = []
     
     if member:
         active_membership = Membership.query.filter_by(
@@ -47,6 +48,11 @@ def dashboard():
         all_pt_subscriptions = PTSubscription.query.filter_by(
             member_id=member.id
         ).order_by(PTSubscription.start_date.desc()).all()
+        
+        # Lấy lịch sử thanh toán (sắp xếp mới nhất trước)
+        payments = Payment.query.filter_by(
+            member_id=member.id
+        ).order_by(Payment.payment_date.desc()).all()
 
     return render_template('member/dashboard.html',
                          user=current_user,
@@ -54,7 +60,8 @@ def dashboard():
                          active_membership=active_membership,
                          all_memberships=all_memberships,
                          active_pt_subscription=active_pt_subscription,
-                         all_pt_subscriptions=all_pt_subscriptions)
+                         all_pt_subscriptions=all_pt_subscriptions,
+                         payments=payments)
 
 
 def _check_and_activate_pending_memberships(member_id):
@@ -164,24 +171,35 @@ def create_checkout_session(package_id):
             flash('Không tìm thấy thông tin hội viên', 'error')
             return redirect(url_for('member.view_packages'))
 
-        # Kiểm tra xem là GYM package hay PT package
-        # Tìm trong cả hai bảng, ưu tiên PTPackage trước (vì ID có thể trùng)
-        package = None
-        package_type = None
+        # Lấy package_type từ form để biết đang ở trang nào
+        package_type = request.form.get('package_type', '').upper()
         
-        # Thử tìm trong PTPackage trước
-        package = PTPackage.query.get(package_id)
-        if package:
-            package_type = 'PT'
+        # Tìm package trong bảng đúng dựa vào package_type
+        package = None
+        if package_type == 'PT':
+            package = PTPackage.query.get(package_id)
+            if not package:
+                flash('Gói PT không tồn tại', 'error')
+                return redirect(url_for('member.view_pt_packages'))
+        elif package_type == 'GYM':
+            package = GymPackage.query.get(package_id)
+            if not package:
+                flash('Gói tập GYM không tồn tại', 'error')
+                return redirect(url_for('member.view_packages'))
         else:
-            # Nếu không tìm thấy trong PTPackage, tìm trong GymPackage
+            # Fallback: nếu không có package_type, thử tìm trong cả 2 bảng
+            # Nhưng ưu tiên GymPackage vì thường GYM packages nhiều hơn
             package = GymPackage.query.get(package_id)
             if package:
                 package_type = 'GYM'
-        
-        if not package:
-            flash('Gói tập không tồn tại', 'error')
-            return redirect(url_for('member.view_packages'))
+            else:
+                package = PTPackage.query.get(package_id)
+                if package:
+                    package_type = 'PT'
+            
+            if not package:
+                flash('Gói tập không tồn tại', 'error')
+                return redirect(url_for('member.view_packages'))
 
         # If trying to buy PT package, check if member has ACTIVE GYM package first
         if package_type == 'PT':
