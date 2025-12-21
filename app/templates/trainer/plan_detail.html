@@ -48,7 +48,16 @@
                     </p>
                     <p><strong>Email:</strong> {{ plan.member.user.email }}</p>
                     <p><strong>Số điện thoại:</strong> {{ plan.member.user.phone or 'Chưa có' }}</p>
-                    <p><strong>Ngày tạo:</strong> {{ plan.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% if plan.pt_subscription %}
+                    <p><strong>Gói PT:</strong> {{ plan.pt_subscription.pt_package.name }}</p>
+                    <p><strong>Ngày bắt đầu gói PT:</strong> 
+                        {{ plan.pt_subscription.start_date.strftime('%d/%m/%Y') if plan.pt_subscription.start_date else 'Chưa bắt đầu' }}
+                    </p>
+                    <p><strong>Ngày hết hạn:</strong> 
+                        {{ plan.pt_subscription.end_date.strftime('%d/%m/%Y') if plan.pt_subscription.end_date else 'N/A' }}
+                    </p>
+                    {% endif %}
+                    <p><strong>Ngày tạo kế hoạch:</strong> {{ plan.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
                 </div>
             </div>
         </div>
