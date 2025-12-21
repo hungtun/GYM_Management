@@ -22,7 +22,6 @@ def get_trainer_stats(trainer_id):
     }
 
 def get_trainer_members(trainer_id):
-    """Lấy danh sách members từ PTSubscription (trainer đang quản lý)"""
     members = db.session.query(Member).join(
         PTSubscription, PTSubscription.member_id == Member.id
     ).filter(
@@ -32,10 +31,7 @@ def get_trainer_members(trainer_id):
     return members
 
 def get_trainer_available_members(trainer_id):
-    """Lấy tất cả members có thể tạo plan:
-    - Members từ PTSubscription đã được trainer accept (status='active')
-    - Bao gồm cả members chưa có plan
-    """
+
     members = db.session.query(Member).join(
         PTSubscription, PTSubscription.member_id == Member.id
     ).filter(
@@ -49,7 +45,6 @@ def get_training_plans_by_trainer(trainer_id):
     return TrainingPlan.query.filter_by(trainer_id=trainer_id).order_by(TrainingPlan.created_at.desc()).all()
 
 def create_training_plan(pt_subscription_id):
-    """Tạo TrainingPlan từ PTSubscription"""
     pt_subscription = PTSubscription.query.get(pt_subscription_id)
     if not pt_subscription:
         raise ValueError("PTSubscription không tồn tại")
@@ -105,20 +100,17 @@ def get_max_days_per_week(default=6):
         return default
 
 def get_pending_pt_subscriptions():
-    """Lấy tất cả PT subscriptions chưa có trainer nhận"""
     return PTSubscription.query.filter_by(
         trainer_id=None,
         status='pending'
     ).order_by(PTSubscription.created_at.desc()).all()
 
 def get_pt_subscriptions_by_trainer(trainer_id):
-    """Lấy tất cả PT subscriptions của một trainer"""
     return PTSubscription.query.filter_by(
         trainer_id=trainer_id
     ).order_by(PTSubscription.created_at.desc()).all()
 
 def accept_pt_subscription(subscription_id, trainer_id):
-    """Trainer nhận PT subscription"""
     subscription = PTSubscription.query.get(subscription_id)
     if not subscription:
         raise ValueError("PTSubscription không tồn tại")
