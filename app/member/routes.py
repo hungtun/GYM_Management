@@ -58,15 +58,27 @@ def dashboard():
 
 
 def _check_and_activate_pending_memberships(member_id):
-    """Check and activate pending memberships if current one expired"""
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
 
-    # Get current active membership
-    active_membership = Membership.query.filter_by(
-        member_id=member_id,
-        active=True
+    # Process GYM packages
+    _activate_pending_for_package_type(member_id, 'GYM', now)
+
+    # Process PT packages
+    _activate_pending_for_package_type(member_id, 'PT', now)
+
+
+def _activate_pending_for_package_type(member_id, package_type, now):
+    """Activate pending membership for a specific package type"""
+
+    # Get current active membership of this type
+    active_membership = Membership.query.join(
+        GymPackage, Membership.package_id == GymPackage.id
+    ).filter(
+        Membership.member_id == member_id,
+        Membership.active == True,
+        GymPackage.package_type == package_type
     ).first()
 
     # If active membership expired, deactivate it
@@ -79,11 +91,13 @@ def _check_and_activate_pending_memberships(member_id):
             # Deactivate expired membership
             active_membership.active = False
 
-            # Find next pending membership (earliest start date)
-            next_membership = Membership.query.filter_by(
-                member_id=member_id,
-                active=False
+            # Find next pending membership of the same type (earliest start date)
+            next_membership = Membership.query.join(
+                GymPackage, Membership.package_id == GymPackage.id
             ).filter(
+                Membership.member_id == member_id,
+                Membership.active == False,
+                GymPackage.package_type == package_type,
                 Membership.start_date <= now
             ).order_by(Membership.start_date.asc()).first()
 
