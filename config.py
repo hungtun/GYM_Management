@@ -4,9 +4,9 @@ import cloudinary
 
 class Config:
     SECRET_KEY = secrets.token_hex(32)
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:123456@localhost:3306/gym_db?charset=utf8mb4"
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:hwngt1412@localhost:3306/gym_db?charset=utf8mb4"
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    PAGE_SIZE = 2
+    PAGE_SIZE = 5
 
     # Email SMTP Configuration
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')

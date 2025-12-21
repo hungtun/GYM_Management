@@ -131,7 +131,7 @@
 
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a href="{{ url_for('trainer.members') }}" class="stat-link">
                 <div class="card stats-card bg-primary text-white h-100">
                     <div class="card-body">
@@ -148,7 +148,7 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a href="{{ url_for('trainer.plans') }}" class="stat-link">
                 <div class="card stats-card bg-success text-white h-100">
                     <div class="card-body">
@@ -165,14 +165,31 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <a href="{{ url_for('trainer.pt_requests') }}" class="stat-link">
+                <div class="card stats-card bg-warning text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-white-50">Yêu cầu PT chờ nhận</h6>
+                                <h2 class="card-title mb-0">{{ pending_requests_count }}</h2>
+                            </div>
+                            <div class="fs-1">📋</div>
+                        </div>
+                        <div class="link-label">Xem yêu cầu <span>→</span></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
             <a href="{{ url_for('trainer.create_plan') }}" class="stat-link">
                 <div class="card stats-card bg-info text-white h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="card-subtitle mb-2 text-white-50">Kế hoạch mới trong tuần</h6>
-                                <h2 class="card-title mb-0">{{ stats.recent_plans|length }}</h2>
+                                <h6 class="card-subtitle mb-2 text-white-50">Tạo kế hoạch</h6>
+                                <h2 class="card-title mb-0">+</h2>
                             </div>
                             <div class="fs-1">⚡</div>
                         </div>
@@ -183,8 +200,58 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
 
+
+
+    <!-- Recent PT Subscriptions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Gói PT gần đây</h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.recent_subscriptions %}
+                    {% for subscription in stats.recent_subscriptions %}
+                    <div class="plan-list-item">
+                        <div>
+                            <h6 class="mb-1">{{ subscription.member.user.first_name or '' }} {{
+                                subscription.member.user.last_name or '' }}</h6>
+                            <div class="plan-meta">
+                                Gói: {{ subscription.pt_package.name }} ·
+                                Ngày đăng ký: {{ subscription.created_at.strftime('%d/%m/%Y') }} ·
+                                {% if subscription.start_date %}
+                                Bắt đầu: {{ subscription.start_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                <span class="text-warning">Chờ trainer nhận</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="plan-actions d-flex gap-2 align-items-center">
+                            {% if subscription.status == 'active' %}
+                            <span class="badge bg-success">Đang hoạt động</span>
+                            {% if not subscription.training_plans %}
+                            <a href="{{ url_for('trainer.create_plan', subscription_id=subscription.id) }}"
+                                class="btn btn-sm btn-primary">Tạo kế hoạch</a>
+                            {% else %}
+                            <a href="{{ url_for('trainer.plan_detail', plan_id=subscription.training_plans[0].id) }}"
+                                class="btn btn-sm btn-outline-primary">Xem kế hoạch</a>
+                            {% endif %}
+                            {% elif subscription.status == 'pending' %}
+                            <span class="badge bg-warning">Chờ nhận</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ subscription.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center py-4">Chưa có gói PT nào được gán cho bạn.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Recent Plans -->
     <div class="row">
@@ -202,19 +269,18 @@
                             <h6 class="mb-1">{{ plan.member.user.first_name or '' }} {{ plan.member.user.last_name or ''
                                 }}</h6>
                             <div class="plan-meta">
+                                {% if plan.pt_subscription %}
+                                Gói PT: {{ plan.pt_subscription.pt_package.name }} ·
+                                {% endif %}
                                 Ngày tạo: {{ plan.created_at.strftime('%d/%m/%Y') }} ·
                                 {{ plan.details|length }} bài tập
                             </div>
                         </div>
-                        <div class="plan-actions d-flex gap-2">
+                        <div class="plan-actions d-flex gap-2 align-items-center">
                             <a href="{{ url_for('trainer.plan_detail', plan_id=plan.id) }}"
                                 class="btn btn-sm btn-outline-primary">Xem</a>
                             <a href="{{ url_for('trainer.edit_plan', plan_id=plan.id) }}"
                                 class="btn btn-sm btn-outline-warning">Sửa</a>
-                            <form method="POST" action="{{ url_for('trainer.delete_plan', plan_id=plan.id) }}"
-                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa kế hoạch này?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                            </form>
                         </div>
                     </div>
                     {% endfor %}

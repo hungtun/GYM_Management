@@ -1,0 +1,101 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Yêu cầu PT - Huấn luyện viên{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-card {
+        border-radius: 14px;
+        border: 1px solid #edf2f7;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .request-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .request-meta {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Yêu cầu PT đang chờ</h2>
+            <p class="text-muted mb-0">{{ total_requests }} yêu cầu đang chờ trainer nhận</p>
+        </div>
+        <a href="{{ url_for('trainer.dashboard') }}" class="btn btn-secondary">
+            ← Quay lại Dashboard
+        </a>
+    </div>
+
+    {% if requests %}
+    <div class="row g-4">
+        {% for request in requests %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card request-card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <h5 class="card-title mb-2">
+                            {{ request.member.user.first_name or '' }} {{ request.member.user.last_name or '' }}
+                        </h5>
+                        <div class="request-meta mb-2">
+                            <p class="mb-1"><strong>📧 Email:</strong> {{ request.member.user.email }}</p>
+                            <p class="mb-1"><strong>📞 Điện thoại:</strong> {{ request.member.user.phone or 'Chưa có' }}
+                            </p>
+                            <p class="mb-1"><strong>📦 Gói PT:</strong> {{ request.pt_package.name }}</p>
+                            <p class="mb-1"><strong>⏱ Thời hạn:</strong> {{ request.pt_package.duration_months }} tháng
+                            </p>
+                            <p class="mb-1"><strong>💰 Giá:</strong> {{ "{:,.0f}".format(request.pt_package.price) }}
+                                VNĐ</p>
+                            <p class="mb-0"><strong>📅 Ngày đăng ký:</strong> {{ request.created_at.strftime('%d/%m/%Y
+                                %H:%M') }}</p>
+                        </div>
+                    </div>
+
+                    {% if request.notes %}
+                    <div class="alert alert-info mb-3">
+                        <small><strong>Ghi chú:</strong> {{ request.notes }}</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto">
+                        <form method="POST"
+                            action="{{ url_for('trainer.accept_pt_request', subscription_id=request.id) }}"
+                            onsubmit="return confirm('Bạn có chắc chắn muốn nhận yêu cầu PT này? Sau khi nhận, bạn sẽ có thể tạo kế hoạch tập luyện cho hội viên này.');">
+                            <button type="submit" class="btn btn-primary w-100">
+                                ✅ Nhận yêu cầu PT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h5>Không có yêu cầu PT nào đang chờ</h5>
+        <p class="mb-0">Tất cả các yêu cầu PT đã được trainer nhận hoặc chưa có member nào đăng ký gói PT.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

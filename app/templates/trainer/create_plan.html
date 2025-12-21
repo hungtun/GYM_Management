@@ -116,8 +116,41 @@
         }
     });
 
+    // Update subscription info when selection changes
+    const subscriptionSelect = document.getElementById('pt_subscription_id');
+    const subscriptionInfo = document.getElementById('subscription-info');
+
+    if (subscriptionSelect) {
+        subscriptionSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            if (this.value && selectedOption) {
+                // Get info from data attributes
+                document.getElementById('info-member').textContent = selectedOption.dataset.member || '-';
+                document.getElementById('info-package').textContent = selectedOption.dataset.package || '-';
+                document.getElementById('info-duration').textContent =
+                    `${selectedOption.dataset.startDate || 'N/A'} - ${selectedOption.dataset.endDate || 'Chưa xác định'}`;
+                document.getElementById('info-status').textContent = selectedOption.dataset.status || '-';
+                subscriptionInfo.style.display = 'block';
+            } else {
+                subscriptionInfo.style.display = 'none';
+            }
+        });
+
+        // Trigger change event if there's a pre-selected value
+        if (subscriptionSelect.value) {
+            subscriptionSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
     // Form validation
     document.getElementById('planForm').addEventListener('submit', function (e) {
+        const ptSubscriptionId = document.getElementById('pt_subscription_id').value;
+        if (!ptSubscriptionId) {
+            e.preventDefault();
+            alert('Vui lòng chọn đăng ký PT!');
+            return false;
+        }
+
         const daysInputs = document.querySelectorAll('input[name="days[]"]');
         let hasValidExercise = false;
 
@@ -165,21 +198,54 @@
     <form id="planForm" method="POST" action="{{ url_for('trainer.create_plan') }}">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Chọn hội viên</h5>
+                <h5 class="mb-0">Chọn đăng ký PT</h5>
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label for="member_id" class="form-label">Hội viên <span class="text-danger">*</span></label>
-                    <select class="form-select" id="member_id" name="member_id" required>
-                        <option value="">-- Chọn hội viên --</option>
-                        {% for member in members %}
-                        <option value="{{ member.id }}" {% if selected_member_id and
-                            selected_member_id|string==member.id|string %}selected{% endif %}>
-                            {{ member.user.first_name or '' }} {{ member.user.last_name or '' }}
-                            ({{ member.user.email }})
+                    <label for="pt_subscription_id" class="form-label">Đăng ký PT <span
+                            class="text-danger">*</span></label>
+                    <select class="form-select" id="pt_subscription_id" name="pt_subscription_id" required>
+                        <option value="">-- Chọn đăng ký PT --</option>
+                        {% for subscription in pt_subscriptions %}
+                        <option value="{{ subscription.id }}" {% if selected_subscription_id and
+                            selected_subscription_id|string==subscription.id|string %}selected{% endif %}
+                            data-member="{{ subscription.member.user.first_name or '' }} {{ subscription.member.user.last_name or '' }} ({{ subscription.member.user.email }})"
+                            data-package="{{ subscription.pt_package.name }}"
+                            data-start-date="{{ subscription.start_date.strftime('%d/%m/%Y') if subscription.start_date else 'N/A' }}"
+                            data-end-date="{{ subscription.end_date.strftime('%d/%m/%Y') if subscription.end_date else 'Chưa xác định' }}"
+                            data-status="{{ subscription.status }}">
+                            {{ subscription.member.user.first_name or '' }} {{ subscription.member.user.last_name or ''
+                            }}
+                            ({{ subscription.member.user.email }}) -
+                            Gói: {{ subscription.pt_package.name }} -
+                            Trạng thái: {{ subscription.status }}
                         </option>
                         {% endfor %}
                     </select>
+                    {% if not pt_subscriptions %}
+                    <div class="alert alert-warning mt-2">
+                        <small>
+                            <strong>Không có đăng ký PT nào để tạo plan.</strong><br>
+                            Có thể do:<br>
+                            - Bạn chưa nhận yêu cầu PT nào.
+                            <a href="{{ url_for('trainer.pt_requests') }}" class="alert-link">Xem và nhận yêu cầu PT tại
+                                đây</a><br>
+                            - Tất cả subscriptions của bạn đã có plan rồi<br>
+                            - Status không phải 'active'
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div id="subscription-info" class="mt-3" style="display: none;">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>Thông tin đăng ký:</h6>
+                            <p class="mb-1"><strong>Hội viên:</strong> <span id="info-member">-</span></p>
+                            <p class="mb-1"><strong>Gói PT:</strong> <span id="info-package">-</span></p>
+                            <p class="mb-1"><strong>Thời hạn:</strong> <span id="info-duration">-</span></p>
+                            <p class="mb-0"><strong>Trạng thái:</strong> <span id="info-status">-</span></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

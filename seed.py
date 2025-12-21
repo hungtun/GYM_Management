@@ -23,8 +23,8 @@ try:
     from app import create_app # Thay create_app bằng hàm tạo ứng dụng của bạn
     from app.extensions import db
     from app.models import (
-        Role, User, Member, Trainer, Receptionist, GymPackage,
-        Membership, Payment, Exercise, TrainingPlan, TrainingDetail
+        Role, User, Member, Trainer, Receptionist, GymPackage, PTPackage,
+        Membership, PTSubscription, Payment, Exercise, TrainingPlan, TrainingDetail
     )
     from werkzeug.security import generate_password_hash
 except ImportError as e:
@@ -47,9 +47,11 @@ def seed_data(app):
         try:
             db.session.query(TrainingDetail).delete()
             db.session.query(TrainingPlan).delete()
+            db.session.query(PTSubscription).delete()
             db.session.query(Exercise).delete()
             db.session.query(Payment).delete()
             db.session.query(Membership).delete()
+            db.session.query(PTPackage).delete()
             db.session.query(GymPackage).delete()
             db.session.query(Member).delete()
             db.session.query(Trainer).delete()
@@ -100,21 +102,27 @@ def seed_data(app):
 
         # --- BƯỚC 4: GÓI TẬP (GYM PACKAGE) ---
         print("\n[Bước 4] Seed Gym Packages...")
-        # Gym packages
-        package_1m = GymPackage(name="Gói 1 tháng", duration_months=1, price=500000.00, description="Gói tập cơ bản 1 tháng", package_type="GYM")
-        package_3m = GymPackage(name="Gói 3 tháng", duration_months=3, price=1200000.00, description="Gói tập 3 tháng, tiết kiệm hơn", package_type="GYM")
-        package_6m = GymPackage(name="Gói 6 tháng", duration_months=6, price=2000000.00, description="Gói tập 6 tháng, ưu đãi tốt", package_type="GYM")
-        package_12m = GymPackage(name="Gói 12 tháng", duration_months=12, price=3500000.00, description="Gói tập 1 năm, giá tốt nhất", package_type="GYM")
+        # Gym packages (chỉ cho GYM, không có package_type nữa)
+        package_1m = GymPackage(name="Gói 1 tháng", duration_months=1, price=500000.00, description="Gói tập cơ bản 1 tháng")
+        package_3m = GymPackage(name="Gói 3 tháng", duration_months=3, price=1200000.00, description="Gói tập 3 tháng, tiết kiệm hơn")
+        package_6m = GymPackage(name="Gói 6 tháng", duration_months=6, price=2000000.00, description="Gói tập 6 tháng, ưu đãi tốt")
+        package_12m = GymPackage(name="Gói 12 tháng", duration_months=12, price=3500000.00, description="Gói tập 1 năm, giá tốt nhất")
 
-        # PT (Personal Trainer) packages
-        pt_1m = GymPackage(name="Gói PT 1 tháng", duration_months=1, price=3000000.00, description="12 buổi tập 1-1 với PT chuyên nghiệp", package_type="PT")
-        pt_3m = GymPackage(name="Gói PT 3 tháng", duration_months=3, price=8000000.00, description="36 buổi tập 1-1 với PT, tiết kiệm 10%", package_type="PT")
-        pt_6m = GymPackage(name="Gói PT 6 tháng", duration_months=6, price=15000000.00, description="72 buổi tập 1-1 với PT, tiết kiệm 15%", package_type="PT")
-        pt_12m = GymPackage(name="Gói PT 12 tháng", duration_months=12, price=28000000.00, description="144 buổi tập 1-1 với PT, tiết kiệm 20%", package_type="PT")
-
-        db.session.add_all([package_1m, package_3m, package_6m, package_12m, pt_1m, pt_3m, pt_6m, pt_12m])
+        db.session.add_all([package_1m, package_3m, package_6m, package_12m])
         db.session.commit()
-        print("   -> Gym Packages & PT Packages OK.")
+        print("   -> Gym Packages OK.")
+
+        # --- BƯỚC 4B: GÓI PT (PERSONAL TRAINER PACKAGE) ---
+        print("\n[Bước 4B] Seed PT Packages...")
+        # PT (Personal Trainer) packages - bảng riêng
+        pt_1m = PTPackage(name="Gói PT 1 tháng", duration_months=1, price=3000000.00, description="12 buổi tập 1-1 với PT chuyên nghiệp")
+        pt_3m = PTPackage(name="Gói PT 3 tháng", duration_months=3, price=8000000.00, description="36 buổi tập 1-1 với PT, tiết kiệm 10%")
+        pt_6m = PTPackage(name="Gói PT 6 tháng", duration_months=6, price=15000000.00, description="72 buổi tập 1-1 với PT, tiết kiệm 15%")
+        pt_12m = PTPackage(name="Gói PT 12 tháng", duration_months=12, price=28000000.00, description="144 buổi tập 1-1 với PT, tiết kiệm 20%")
+
+        db.session.add_all([pt_1m, pt_3m, pt_6m, pt_12m])
+        db.session.commit()
+        print("   -> PT Packages OK.")
 
         # --- BƯỚC 5: ĐĂNG KÝ GÓI (MEMBERSHIP) ---
         print("\n[Bước 5] Seed Memberships...")
@@ -147,9 +155,33 @@ def seed_data(app):
         db.session.commit()
         print("   -> Exercises OK.")
 
-        # --- BƯỚC 8 & 9: KẾ HOẠCH TẬP LUYỆN ---
-        print("\n[Bước 8 & 9] Seed Training Plans and Details...")
-        training_plan_1 = TrainingPlan(trainer=trainer_1, member=member_1, date_created=datetime.utcnow() - timedelta(days=15))
+        # --- BƯỚC 8: PT SUBSCRIPTION (Đăng ký gói PT) ---
+        print("\n[Bước 8] Seed PT Subscriptions...")
+        # Tạo PT Subscription cho member_1 với trainer_1
+        pt_sub_start = datetime.utcnow() - timedelta(days=15)
+        pt_sub_end = pt_sub_start + timedelta(days=30)  # 1 tháng
+        
+        pt_subscription_1 = PTSubscription(
+            member=member_1,
+            pt_package=pt_1m,
+            trainer=trainer_1,
+            start_date=pt_sub_start,
+            end_date=pt_sub_end,
+            active=True,
+            status="active"
+        )
+        db.session.add(pt_subscription_1)
+        db.session.commit()
+        print("   -> PT Subscriptions OK.")
+
+        # --- BƯỚC 9: KẾ HOẠCH TẬP LUYỆN ---
+        print("\n[Bước 9] Seed Training Plans and Details...")
+        # TrainingPlan cần có pt_subscription_id
+        training_plan_1 = TrainingPlan(
+            pt_subscription=pt_subscription_1,
+            trainer=trainer_1,
+            member=member_1
+        )
         db.session.add(training_plan_1)
         db.session.flush()  # Dùng flush thay vì commit để giữ transaction
 

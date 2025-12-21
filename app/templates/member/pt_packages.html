@@ -10,14 +10,15 @@
     </p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     {% if not has_gym_package %}
@@ -62,7 +63,9 @@
 
                     <div class="mt-auto">
                         {% if has_gym_package %}
-                        <form method="POST" action="{{ url_for('member.create_checkout_session', package_id=package.id) }}">
+                        <form method="POST"
+                            action="{{ url_for('member.create_checkout_session', package_id=package.id) }}">
+                            <input type="hidden" name="package_type" value="PT">
                             <button type="submit" class="btn btn-warning w-100 text-white">
                                 <i class="bi bi-credit-card"></i> Thanh toán
                             </button>
@@ -87,17 +90,17 @@
 </div>
 
 <style>
-.card {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4) !important;
-}
-.border-warning {
-    border-width: 2px !important;
-}
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4) !important;
+    }
+
+    .border-warning {
+        border-width: 2px !important;
+    }
 </style>
 {% endblock %}
-
-

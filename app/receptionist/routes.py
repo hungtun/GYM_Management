@@ -21,6 +21,7 @@ def dashboard():
     members = get_member_list()
     packages = GymPackage.query.all()
     today = datetime.now().strftime('%Y-%m-%d')
+    
     return render_template('receptionist/dashboard.html',
                          members=members,
                          packages=packages,
@@ -103,11 +104,9 @@ def member_detail(member_id):
     now = datetime.now(timezone.utc)
     has_valid_gym = False
 
-    gym_memberships = Membership.query.join(
-        GymPackage, Membership.package_id == GymPackage.id
-    ).filter(
-        Membership.member_id == member_id,
-        GymPackage.package_type == 'GYM'
+    # Tất cả Membership đều là GYM package (PT được quản lý riêng qua PTSubscription)
+    gym_memberships = Membership.query.filter_by(
+        member_id=member_id
     ).all()
 
     for membership in gym_memberships:
@@ -131,9 +130,17 @@ def member_detail(member_id):
         all_memberships=member_data.get('all_memberships', [])
     )
 
+    # Lấy lịch sử thanh toán
+    payments = Payment.query.filter_by(member_id=member_id).order_by(Payment.payment_date.desc()).all()
+    payments_html = render_template(
+        'receptionist/partials/payment_history.html',
+        payments=payments
+    )
+
     return jsonify({
         'info_html': info_html,
         'membership_html': membership_html,
+        'payments_html': payments_html,
         'member_id': member_id,
         'has_valid_gym': has_valid_gym
     })
@@ -177,4 +184,25 @@ def add_package(member_id):
         flash(f'Lỗi: {str(e)}', 'error')
 
     return redirect(url_for('receptionist_bp.dashboard'))
+
+@receptionist.route('/payment/<int:payment_id>/invoice')
+@login_required
+@role_required('receptionist', 'admin')
+def payment_invoice(payment_id):
+    """Xem hóa đơn thanh toán chi tiết"""
+    payment = Payment.query.get_or_404(payment_id)
+    member = payment.member
+    
+    # Lấy thông tin gói tập liên quan (nếu có)
+    membership = None
+    if payment.payment_date:
+        # Tìm membership gần nhất với payment_date
+        membership = Membership.query.filter_by(member_id=member.id).filter(
+            Membership.start_date <= payment.payment_date
+        ).order_by(Membership.start_date.desc()).first()
+    
+    return render_template('receptionist/payment_invoice.html',
+                         payment=payment,
+                         member=member,
+                         membership=membership)
 
