@@ -32,27 +32,36 @@ def seed_data(app):
         
         # --- XÓA DỮ LIỆU CŨ ---
         print("\n[Bước 0] Xóa dữ liệu cũ...")
-        try:
-            db.session.query(TrainingDetail).delete()
-            db.session.query(TrainingPlan).delete()
-            db.session.query(PTSubscription).delete()
-            db.session.query(Exercise).delete()
-            db.session.query(Payment).delete()
-            db.session.query(Membership).delete()
-            db.session.query(PTPackage).delete()
-            db.session.query(GymPackage).delete()
-            db.session.query(SystemSetting).delete()
-            db.session.query(Member).delete()
-            db.session.query(Trainer).delete()
-            db.session.query(Receptionist).delete()
-            db.session.query(User).delete()
-            db.session.query(Role).delete()
-            db.session.commit()
-            print("   -> Đã xóa dữ liệu cũ thành công.")
-        except Exception as e:
-            db.session.rollback()
-            print(f"   -> Lỗi khi xóa dữ liệu: {e}")
-            sys.exit(1)
+        skip_delete = os.environ.get('SKIP_DELETE', 'false').lower() == 'true'
+        
+        if skip_delete:
+            print("   -> Bỏ qua bước xóa dữ liệu (SKIP_DELETE=true)")
+        else:
+            try:
+                db.session.query(TrainingDetail).delete()
+                db.session.query(TrainingPlan).delete()
+                db.session.query(PTSubscription).delete()
+                db.session.query(Exercise).delete()
+                db.session.query(Payment).delete()
+                db.session.query(Membership).delete()
+                db.session.query(PTPackage).delete()
+                db.session.query(GymPackage).delete()
+                db.session.query(SystemSetting).delete()
+                db.session.query(Member).delete()
+                db.session.query(Trainer).delete()
+                db.session.query(Receptionist).delete()
+                db.session.query(User).delete()
+                db.session.query(Role).delete()
+                db.session.commit()
+                print("   -> Đã xóa dữ liệu cũ thành công.")
+            except Exception as e:
+                db.session.rollback()
+                print(f"   ⚠️  Lỗi khi xóa dữ liệu: {e}")
+                print("   💡 Tip: Nếu đang chạy trên PythonAnywhere hoặc production,")
+                print("      hãy set SKIP_DELETE=true để bỏ qua bước này:")
+                print("      export SKIP_DELETE=true")
+                print("      python seed.py")
+                print("   -> Tiếp tục seed dữ liệu mới (có thể bị duplicate)...")
 
 
         # --- BƯỚC 1: ROLES ---
